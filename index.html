@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MOJO Control Solutions</title>
+  <style>
+    :root {
+      --bg: #0b1320;
+      --bg-soft: #121c2d;
+      --panel: rgba(255,255,255,0.06);
+      --text: #eef4ff;
+      --muted: #b8c4d9;
+      --line: rgba(255,255,255,0.12);
+      --accent: #3dd6c6;
+      --accent-2: #79a8ff;
+      --shadow: 0 20px 50px rgba(0,0,0,0.35);
+      --max: 1120px;
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      font-family: Inter, Arial, Helvetica, sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(circle at top left, rgba(61,214,198,0.16), transparent 28%),
+        radial-gradient(circle at top right, rgba(121,168,255,0.14), transparent 26%),
+        linear-gradient(180deg, #09111d 0%, #0b1320 100%);
+      line-height: 1.6;
+    }
+
+    a { color: inherit; text-decoration: none; }
+
+    .wrap {
+      width: min(calc(100% - 32px), var(--max));
+      margin: 0 auto;
+    }
+
+    .nav {
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      backdrop-filter: blur(14px);
+      background: rgba(9, 17, 29, 0.72);
+      border-bottom: 1px solid var(--line);
+    }
+
+    .nav-inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+      padding: 14px 0;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+    }
+
+    .logo {
+      width: 42px;
+      height: 42px;
+      border-radius: 14px;
+      display: grid;
+      place-items: center;
+      color: #071018;
+      font-weight: 800;
+      background: linear-gradient(135deg, var(--accent), var(--accent-2));
+      box-shadow: var(--shadow);
+    }
+
+    .menu {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px;
+      color: var(--muted);
+      font-size: 0.95rem;
+    }
+
+    .hero {
+      padding: 72px 0 48px;
+    }
+
+    .hero-grid {
+      display: grid;
+      grid-template-columns: 1.2fr 0.8fr;
+      gap: 28px;
+      align-items: stretch;
+    }
+
+    .hero-copy,
+    .hero-card,
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 28px;
+      box-shadow: var(--shadow);
+    }
+
+    .hero-copy {
+      padding: 40px;
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      border: 1px solid rgba(61,214,198,0.35);
+      color: #d9fffb;
+      background: rgba(61,214,198,0.10);
+      border-radius: 999px;
+      padding: 8px 14px;
+      font-size: 0.86rem;
+      margin-bottom: 18px;
+    }
+
+    h1 {
+      margin: 0 0 16px;
+      font-size: clamp(2.2rem, 5vw, 4.4rem);
+      line-height: 1.05;
+      letter-spacing: -0.03em;
+    }
+
+    .lead {
+      color: var(--muted);
+      font-size: 1.08rem;
+      max-width: 62ch;
+      margin: 0 0 28px;
+    }
+
+    .cta-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 14px;
+      margin-bottom: 26px;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 48px;
+      padding: 0 18px;
+      border-radius: 14px;
+      font-weight: 700;
+      border: 1px solid var(--line);
+      transition: 0.2s ease;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--accent), var(--accent-2));
+      color: #071018;
+      border: none;
+    }
+
+    .btn-secondary {
+      background: rgba(255,255,255,0.03);
+      color: var(--text);
+    }
+
+    .btn:hover { transform: translateY(-1px); }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 14px;
+      margin-top: 10px;
+    }
+
+    .stat {
+      padding: 16px;
+      border-radius: 18px;
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,0.03);
+    }
+
+    .stat strong {
+      display: block;
+      font-size: 1.3rem;
+      margin-bottom: 4px;
+    }
+
+    .stat span {
+      color: var(--muted);
+      font-size: 0.92rem;
+    }
+
+    .hero-card {
+      padding: 28px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 18px;
+    }
+
+    .hero-card h2,
+    .section h2 {
+      margin: 0 0 10px;
+      font-size: clamp(1.5rem, 2vw, 2.1rem);
+      letter-spacing: -0.02em;
+    }
+
+    .muted { color: var(--muted); }
+
+    .checklist {
+      display: grid;
+      gap: 12px;
+      margin: 10px 0 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .checklist li {
+      padding: 14px 14px 14px 44px;
+      position: relative;
+      border-radius: 16px;
+      background: rgba(255,255,255,0.03);
+      border: 1px solid var(--line);
+    }
+
+    .checklist li::before {
+      content: "✓";
+      position: absolute;
+      left: 16px;
+      top: 13px;
+      color: var(--accent);
+      font-weight: 800;
+    }
+
+    .section {
+      padding: 24px 0;
+    }
+
+    .section-header {
+      margin-bottom: 18px;
+    }
+
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 18px;
+    }
+
+    .panel {
+      padding: 24px;
+    }
+
+    .panel h3 {
+      margin: 0 0 10px;
+      font-size: 1.15rem;
+    }
+
+    .panel p {
+      margin: 0;
+      color: var(--muted);
+    }
+
+    .feature-list {
+      margin: 14px 0 0;
+      padding-left: 18px;
+      color: var(--muted);
+    }
+
+    .about-grid,
+    .contact-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 18px;
+    }
+
+    .tag-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 16px;
+    }
+
+    .tag {
+      padding: 8px 12px;
+      border-radius: 999px;
+      border: 1px solid var(--line);
+      color: var(--muted);
+      background: rgba(255,255,255,0.03);
+      font-size: 0.9rem;
+    }
+
+    .contact-card {
+      display: grid;
+      gap: 10px;
+    }
+
+    .contact-item {
+      padding: 14px 16px;
+      border-radius: 16px;
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,0.03);
+    }
+
+    .contact-item small {
+      display: block;
+      color: var(--muted);
+      margin-bottom: 4px;
+    }
+
+    .footer {
+      padding: 36px 0 52px;
+      color: var(--muted);
+      font-size: 0.92rem;
+    }
+
+    @media (max-width: 920px) {
+      .hero-grid,
+      .cards,
+      .about-grid,
+      .contact-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .stats {
+        grid-template-columns: 1fr;
+      }
+
+      .hero-copy,
+      .hero-card,
+      .panel {
+        border-radius: 22px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <nav class="nav">
+    <div class="wrap nav-inner">
+      <div class="brand">
+        <div class="logo">M</div>
+        <div>
+          <div>MOJO Control Solutions</div>
+        </div>
+      </div>
+      <div class="menu">
+        <a href="#services">Services</a>
+        <a href="#about">About</a>
+        <a href="#contact">Contact</a>
+      </div>
+    </div>
+  </nav>
+
+  <header class="hero">
+    <div class="wrap hero-grid">
+      <section class="hero-copy">
+        <div class="eyebrow">Industrial Automation • Control Systems • SCADA</div>
+        <h1>Practical industrial automation solutions built on real engineering experience.</h1>
+        <p class="lead">
+          MOJO Control Solutions provides industrial automation, control systems, SCADA, commissioning, troubleshooting,
+          and engineering support with a focus on practical outcomes, reliability, and operational clarity.
+        </p>
+        <div class="cta-row">
+          <a class="btn btn-primary" href="#contact">Get in Touch</a>
+          <a class="btn btn-secondary" href="#services">View Services</a>
+        </div>
+        <div class="stats">
+          <div class="stat">
+            <strong>37+ years</strong>
+            <span>Engineering experience across industrial environments</span>
+          </div>
+          <div class="stat">
+            <strong>PLC / SCADA</strong>
+            <span>Control logic, visualisation, diagnostics, and system integration</span>
+          </div>
+          <div class="stat">
+            <strong>Site to strategy</strong>
+            <span>From commissioning and troubleshooting to digital engineering direction</span>
+          </div>
+        </div>
+      </section>
+
+      <aside class="hero-card">
+        <div>
+          <h2>What we do</h2>
+          <p class="muted">Focused support for industrial plants, control systems, and automation improvement initiatives.</p>
+        </div>
+        <ul class="checklist">
+          <li>Industrial automation and control systems engineering</li>
+          <li>SCADA, commissioning, fault finding, and operational support</li>
+          <li>Engineering dashboards, digital tools, and AI-augmented workflows</li>
+          <li>Practical consulting for reliability, diagnostics, and performance improvement</li>
+        </ul>
+      </aside>
+    </div>
+  </header>
+
+  <main>
+    <section class="section" id="services">
+      <div class="wrap">
+        <div class="section-header">
+          <h2>Core Services</h2>
+          <p class="muted">A concise starting point for a professional homepage. These sections can be expanded later into dedicated service pages.</p>
+        </div>
+        <div class="cards">
+          <article class="panel">
+            <h3>Industrial Automation</h3>
+            <p>Control system reviews, automation support, logic understanding, system improvement, and practical engineering advice for plant operations.</p>
+            <ul class="feature-list">
+              <li>PLC and control logic review</li>
+              <li>Operational troubleshooting support</li>
+              <li>Automation improvement initiatives</li>
+            </ul>
+          </article>
+          <article class="panel">
+            <h3>SCADA & Commissioning</h3>
+            <p>SCADA support, commissioning preparation, diagnostics, and system behaviour interpretation with a practical site-driven mindset.</p>
+            <ul class="feature-list">
+              <li>SCADA and HMI support</li>
+              <li>Commissioning readiness assistance</li>
+              <li>Alarm and control behaviour analysis</li>
+            </ul>
+          </article>
+          <article class="panel">
+            <h3>Engineering Digital Tools</h3>
+            <p>Development of practical calculators, dashboards, engineering summaries, and digital knowledge assets to improve decision-making.</p>
+            <ul class="feature-list">
+              <li>Engineering dashboards</li>
+              <li>HTML tools and calculators</li>
+              <li>AI-augmented engineering workflows</li>
+            </ul>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="about">
+      <div class="wrap about-grid">
+        <article class="panel">
+          <h2>About MOJO Control Solutions</h2>
+          <p class="muted">
+            MOJO Control Solutions is positioned to support industrial clients requiring practical control systems knowledge,
+            automation insight, and engineering support grounded in real operational experience.
+          </p>
+          <div class="tag-row">
+            <span class="tag">Industrial Automation</span>
+            <span class="tag">Control Systems</span>
+            <span class="tag">SCADA</span>
+            <span class="tag">Commissioning</span>
+            <span class="tag">Diagnostics</span>
+            <span class="tag">Engineering Tools</span>
+          </div>
+        </article>
+        <article class="panel">
+          <h2>Why this site exists</h2>
+          <p class="muted">
+            This homepage acts as a clean professional starting point for your domain. It can later grow into a full consulting site,
+            a knowledge hub, or a showcase for engineering tools, reports, and articles.
+          </p>
+        </article>
+      </div>
+    </section>
+
+    <section class="section" id="contact">
+      <div class="wrap contact-grid">
+        <article class="panel contact-card">
+          <div>
+            <h2>Contact</h2>
+            <p class="muted">This section can be updated later with your preferred contact details and a professional domain email address.</p>
+          </div>
+          <div class="contact-item">
+            <small>Email</small>
+            <div>aung.kyaw2605@gmail.com</div>
+          </div>
+          <div class="contact-item">
+            <small>Location</small>
+            <div>Melbourne, Victoria, Australia</div>
+          </div>
+        </article>
+        <article class="panel">
+          <h2>Next step</h2>
+          <p class="muted">
+            Once you are ready, this temporary homepage can be expanded into a fuller site with service pages, project showcases,
+            downloadable tools, engineering articles, and a branded professional contact email.
+          </p>
+          <div class="cta-row" style="margin-top:18px; margin-bottom:0;">
+            <a class="btn btn-primary" href="mailto:aung.kyaw2605@gmail.com">Email Now</a>
+          </div>
+        </article>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="wrap">
+      © 2026 MOJO Control Solutions. All rights reserved.
+    </div>
+  </footer>
+</body>
+</html>
