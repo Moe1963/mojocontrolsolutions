@@ -1,0 +1,1480 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Aung Kyaw — AI-Augmented Astrologer · Cosmic Timing Insights</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;500;600;700;800&family=Barlow:wght@400;500;600&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --black:   #07090d;
+      --dark:    #0c0f18;
+      --steel:   #111622;
+      --panel:   #171e2e;
+      --rim:     #222d42;
+      --line:    rgba(255,255,255,0.07);
+      --line2:   rgba(255,255,255,0.04);
+      --text:    #d8e6f5;
+      --muted:   #7090aa;
+      --dim:     #38506a;
+      --gold:    #c9a84c;
+      --gold2:   #e8cc7a;
+      --violet:  #8b6bcc;
+      --violet2: #a885e8;
+      --teal:    #4ab8b0;
+      --max:     1160px;
+      --mono:    'Share Tech Mono', monospace;
+      --cond:    'Barlow Condensed', sans-serif;
+      --body:    'Barlow', sans-serif;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: var(--body);
+      background: var(--black);
+      color: var(--text);
+      line-height: 1.6;
+      overflow-x: hidden;
+    }
+
+    /* Star-field + subtle grid overlay */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image:
+        radial-gradient(1px 1px at 10% 20%, rgba(201,168,76,0.18) 0%, transparent 100%),
+        radial-gradient(1px 1px at 25% 55%, rgba(255,255,255,0.12) 0%, transparent 100%),
+        radial-gradient(1px 1px at 40% 10%, rgba(255,255,255,0.10) 0%, transparent 100%),
+        radial-gradient(1px 1px at 60% 75%, rgba(139,107,204,0.18) 0%, transparent 100%),
+        radial-gradient(1px 1px at 75% 35%, rgba(255,255,255,0.08) 0%, transparent 100%),
+        radial-gradient(1px 1px at 88% 60%, rgba(201,168,76,0.15) 0%, transparent 100%),
+        radial-gradient(1px 1px at 92% 15%, rgba(255,255,255,0.12) 0%, transparent 100%),
+        radial-gradient(1px 1px at 50% 90%, rgba(139,107,204,0.14) 0%, transparent 100%),
+        linear-gradient(rgba(255,255,255,0.012) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.012) 1px, transparent 1px);
+      background-size: 100% 100%, 100% 100%, 100% 100%, 100% 100%, 100% 100%, 100% 100%, 100% 100%, 100% 100%, 50px 50px, 50px 50px;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    a { color: inherit; text-decoration: none; }
+
+    p { text-align: justify; }
+
+    .wrap {
+      width: min(calc(100% - 40px), var(--max));
+      margin: 0 auto;
+      position: relative;
+      z-index: 1;
+    }
+
+    /* ── NAV ── */
+    .nav {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: rgba(7, 9, 13, 0.93);
+      backdrop-filter: blur(14px);
+      border-bottom: 1px solid var(--rim);
+    }
+
+    .nav-inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 64px;
+    }
+
+    .brand { display: flex; align-items: center; gap: 0; }
+
+    .logo-block {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 64px;
+      height: 64px;
+      background: var(--gold);
+      color: #000;
+      font-family: var(--cond);
+      font-weight: 800;
+      font-size: 1.4rem;
+      letter-spacing: -0.01em;
+      flex-shrink: 0;
+      clip-path: polygon(0 0, 100% 0, 100% 80%, 88% 100%, 0 100%);
+      position: relative;
+    }
+
+    .logo-block svg {
+      width: 28px;
+      height: 28px;
+    }
+
+    .brand-text {
+      padding: 0 20px;
+      border-right: 1px solid var(--rim);
+    }
+
+    .brand-name {
+      font-family: var(--cond);
+      font-weight: 700;
+      font-size: 1.1rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--text);
+      line-height: 1.2;
+    }
+
+    .brand-tag {
+      font-family: var(--mono);
+      font-size: 0.68rem;
+      color: var(--gold);
+      letter-spacing: 0.05em;
+    }
+
+    .status-bar {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      padding: 0 20px;
+      font-family: var(--mono);
+      font-size: 0.72rem;
+      color: var(--muted);
+    }
+
+    .status-dot { display: flex; align-items: center; gap: 6px; }
+
+    .dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--teal);
+      box-shadow: 0 0 7px var(--teal);
+      animation: pulse 3s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.3; }
+    }
+
+    .menu {
+      display: flex;
+      align-items: center;
+      gap: 0;
+      margin-left: auto;
+    }
+
+    .menu a {
+      display: flex;
+      align-items: center;
+      height: 64px;
+      padding: 0 22px;
+      font-family: var(--cond);
+      font-weight: 600;
+      font-size: 0.88rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--muted);
+      border-left: 1px solid var(--rim);
+      transition: color 0.15s, background 0.15s;
+    }
+
+    .menu a:hover {
+      color: var(--gold);
+      background: rgba(201,168,76,0.06);
+    }
+
+    .menu a.cta-link {
+      background: var(--gold);
+      color: #000;
+      font-weight: 700;
+      border-left: none;
+    }
+
+    .menu a.cta-link:hover {
+      background: var(--gold2);
+      color: #000;
+    }
+
+    /* ── HERO ── */
+    .hero {
+      padding: 0;
+      border-bottom: 1px solid var(--rim);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero::after {
+      content: '';
+      position: absolute;
+      top: -80px;
+      right: -120px;
+      width: 700px;
+      height: 700px;
+      border: 1px solid rgba(201,168,76,0.07);
+      border-radius: 50%;
+      pointer-events: none;
+    }
+
+    .hero::before {
+      content: '';
+      position: absolute;
+      top: 40px;
+      right: 60px;
+      width: 400px;
+      height: 400px;
+      border: 1px solid rgba(139,107,204,0.06);
+      border-radius: 50%;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .hero-grid {
+      display: grid;
+      grid-template-columns: 1fr 380px;
+      min-height: 480px;
+    }
+
+    .hero-left {
+      padding: 56px 48px 56px 0;
+      border-right: 1px solid var(--rim);
+      position: relative;
+      z-index: 1;
+    }
+
+    .sys-label {
+      font-family: var(--mono);
+      font-size: 0.72rem;
+      color: var(--gold);
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .sys-label::before {
+      content: '';
+      display: block;
+      width: 24px;
+      height: 1px;
+      background: var(--gold);
+    }
+
+    h1 {
+      font-family: var(--cond);
+      font-weight: 800;
+      font-size: clamp(2.8rem, 5.5vw, 5rem);
+      line-height: 0.95;
+      letter-spacing: -0.01em;
+      text-transform: uppercase;
+      color: #fff;
+      margin-bottom: 24px;
+    }
+
+    h1 em {
+      font-style: normal;
+      color: var(--gold);
+    }
+
+    .lead {
+      font-size: 1.05rem;
+      color: var(--muted);
+      max-width: 52ch;
+      margin-bottom: 36px;
+      line-height: 1.65;
+    }
+
+    .btn-row {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      height: 48px;
+      padding: 0 24px;
+      font-family: var(--cond);
+      font-weight: 700;
+      font-size: 0.9rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      transition: 0.15s ease;
+      cursor: pointer;
+      border: none;
+    }
+
+    .btn-gold {
+      background: var(--gold);
+      color: #000;
+      clip-path: polygon(0 0, 100% 0, 100% 70%, 94% 100%, 0 100%);
+    }
+    .btn-gold:hover { background: var(--gold2); }
+
+    .btn-ghost {
+      background: transparent;
+      color: var(--text);
+      border: 1px solid var(--rim);
+    }
+    .btn-ghost:hover {
+      border-color: var(--gold);
+      color: var(--gold);
+    }
+
+    .hero-right {
+      background: var(--steel);
+      padding: 32px 28px;
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+      z-index: 1;
+    }
+
+    .panel-header {
+      font-family: var(--mono);
+      font-size: 0.7rem;
+      color: var(--dim);
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      border-bottom: 1px solid var(--rim);
+      padding-bottom: 12px;
+      margin-bottom: 20px;
+    }
+
+    .spec-list { display: grid; gap: 0; flex: 1; }
+
+    .spec-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 14px 0;
+      border-bottom: 1px solid var(--line2);
+      gap: 12px;
+    }
+    .spec-row:last-child { border-bottom: none; }
+
+    .spec-key {
+      font-family: var(--mono);
+      font-size: 0.72rem;
+      color: var(--dim);
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      flex-shrink: 0;
+    }
+
+    .spec-val {
+      font-family: var(--cond);
+      font-weight: 600;
+      font-size: 0.95rem;
+      color: var(--text);
+      text-align: right;
+    }
+
+    .spec-val.hi { color: var(--gold); }
+    .spec-val.ok { color: var(--teal); }
+    .spec-val.vl { color: var(--violet2); }
+
+    .readout-box {
+      margin-top: 20px;
+      background: var(--panel);
+      border: 1px solid var(--rim);
+      padding: 16px;
+    }
+
+    .readout-label {
+      font-family: var(--mono);
+      font-size: 0.65rem;
+      color: var(--dim);
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+
+    .readout-val {
+      font-family: var(--mono);
+      font-size: 2rem;
+      color: var(--gold);
+      letter-spacing: -0.02em;
+    }
+
+    .readout-unit {
+      font-size: 0.9rem;
+      color: var(--muted);
+      margin-left: 4px;
+    }
+
+    /* ── TICKER ── */
+    .ticker {
+      background: var(--gold);
+      height: 36px;
+      display: flex;
+      align-items: center;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .ticker-label {
+      background: #000;
+      color: var(--gold);
+      font-family: var(--mono);
+      font-size: 0.72rem;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      padding: 0 16px;
+      flex-shrink: 0;
+      z-index: 2;
+    }
+
+    .ticker-track {
+      display: flex;
+      gap: 0;
+      animation: scroll 36s linear infinite;
+      white-space: nowrap;
+    }
+
+    @keyframes scroll {
+      from { transform: translateX(0); }
+      to   { transform: translateX(-50%); }
+    }
+
+    .ticker-item {
+      font-family: var(--mono);
+      font-size: 0.72rem;
+      color: #000;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      padding: 0 32px;
+      flex-shrink: 0;
+    }
+
+    .ticker-sep { color: rgba(0,0,0,0.35); padding: 0 4px; }
+
+    /* ── SECTIONS ── */
+    section {
+      padding: 64px 0;
+      border-bottom: 1px solid var(--rim);
+      position: relative;
+      z-index: 1;
+    }
+
+    .section-meta {
+      display: flex;
+      align-items: baseline;
+      gap: 20px;
+      margin-bottom: 36px;
+    }
+
+    h2 {
+      font-family: var(--cond);
+      font-weight: 800;
+      font-size: clamp(1.8rem, 3vw, 2.8rem);
+      letter-spacing: -0.01em;
+      text-transform: uppercase;
+      color: #fff;
+      line-height: 1;
+    }
+
+    h2 span { color: var(--gold); }
+
+    .section-num {
+      font-family: var(--mono);
+      font-size: 0.72rem;
+      color: var(--dim);
+      letter-spacing: 0.1em;
+    }
+
+    /* ── SERVICES GRID ── */
+    .service-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1px;
+      background: var(--rim);
+      border: 1px solid var(--rim);
+    }
+
+    .service-card {
+      background: var(--dark);
+      padding: 32px 28px;
+      position: relative;
+      transition: background 0.2s;
+    }
+
+    .service-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 3px;
+      background: var(--gold);
+      transform: scaleX(0);
+      transform-origin: left;
+      transition: transform 0.25s ease;
+    }
+
+    .service-card:hover { background: var(--steel); }
+    .service-card:hover::before { transform: scaleX(1); }
+
+    .service-num {
+      font-family: var(--mono);
+      font-size: 0.68rem;
+      color: var(--dim);
+      letter-spacing: 0.12em;
+      margin-bottom: 16px;
+    }
+
+    .service-icon {
+      width: 44px;
+      height: 44px;
+      border: 1px solid var(--rim);
+      display: grid;
+      place-items: center;
+      margin-bottom: 20px;
+      color: var(--gold);
+    }
+
+    .service-card h3 {
+      font-family: var(--cond);
+      font-weight: 700;
+      font-size: 1.25rem;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      color: #fff;
+      margin-bottom: 12px;
+    }
+
+    .service-card p {
+      color: var(--muted);
+      font-size: 0.92rem;
+      line-height: 1.6;
+      margin-bottom: 20px;
+    }
+
+    .feat-list { list-style: none; display: grid; gap: 8px; }
+
+    .feat-list li {
+      font-family: var(--mono);
+      font-size: 0.75rem;
+      color: var(--muted);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .feat-list li::before {
+      content: '→';
+      color: var(--gold);
+      flex-shrink: 0;
+    }
+
+    .price-tag {
+      display: inline-block;
+      font-family: var(--mono);
+      font-size: 0.78rem;
+      color: #000;
+      background: var(--gold);
+      padding: 4px 10px;
+      letter-spacing: 0.06em;
+      margin-top: 16px;
+    }
+
+    /* ── PHILOSOPHY BLOCK ── */
+    .philosophy-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1px;
+      background: var(--rim);
+      border: 1px solid var(--rim);
+      margin-top: 48px;
+    }
+
+    .phil-cell {
+      background: var(--dark);
+      padding: 28px 28px;
+    }
+
+    .phil-cell.accent { background: var(--steel); }
+
+    .phil-title {
+      font-family: var(--cond);
+      font-weight: 700;
+      font-size: 1rem;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .phil-title::before {
+      content: '';
+      display: block;
+      width: 16px;
+      height: 1px;
+      background: var(--gold);
+    }
+
+    .phil-cell p {
+      color: var(--muted);
+      font-size: 0.92rem;
+      line-height: 1.65;
+    }
+
+    /* ── STATS ROW ── */
+    .stats-row {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 1px;
+      background: var(--rim);
+      border: 1px solid var(--rim);
+      margin-top: 48px;
+    }
+
+    .stat-cell {
+      background: var(--dark);
+      padding: 28px 24px;
+      text-align: center;
+    }
+
+    .stat-num {
+      font-family: var(--cond);
+      font-weight: 800;
+      font-size: 2.5rem;
+      color: var(--gold);
+      line-height: 1;
+      margin-bottom: 8px;
+    }
+
+    .stat-desc {
+      font-family: var(--mono);
+      font-size: 0.7rem;
+      color: var(--dim);
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      line-height: 1.5;
+    }
+
+    /* ── ABOUT ── */
+    .about-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1px;
+      background: var(--rim);
+      border: 1px solid var(--rim);
+    }
+
+    .about-left {
+      background: var(--dark);
+      padding: 40px 36px;
+    }
+
+    .about-right {
+      background: var(--steel);
+      padding: 40px 36px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .about-left p {
+      color: var(--muted);
+      font-size: 1rem;
+      line-height: 1.7;
+      margin-top: 20px;
+      margin-bottom: 28px;
+    }
+
+    .tag-row { display: flex; flex-wrap: wrap; gap: 8px; }
+
+    .tag {
+      font-family: var(--mono);
+      font-size: 0.68rem;
+      color: var(--muted);
+      border: 1px solid var(--rim);
+      padding: 6px 12px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .capability-block {
+      border: 1px solid var(--rim);
+      padding: 16px 18px;
+      background: var(--panel);
+    }
+
+    .cap-title {
+      font-family: var(--cond);
+      font-weight: 600;
+      font-size: 0.9rem;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-bottom: 6px;
+    }
+
+    .cap-desc {
+      font-size: 0.88rem;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+
+    /* ── DISCLAIMER ── */
+    .disclaimer-bar {
+      background: var(--panel);
+      border: 1px solid var(--rim);
+      border-left: 3px solid var(--violet);
+      padding: 16px 22px;
+      margin-top: 40px;
+      display: flex;
+      align-items: flex-start;
+      gap: 14px;
+    }
+
+    .disclaimer-label {
+      font-family: var(--mono);
+      font-size: 0.67rem;
+      color: var(--violet2);
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+
+    .disclaimer-text {
+      font-size: 0.87rem;
+      color: var(--muted);
+      line-height: 1.6;
+    }
+
+    /* ── CONTACT ── */
+    .contact-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1px;
+      background: var(--rim);
+      border: 1px solid var(--rim);
+    }
+
+    .contact-left {
+      background: var(--dark);
+      padding: 40px 36px;
+    }
+
+    .contact-left p {
+      color: var(--muted);
+      font-size: 0.97rem;
+      line-height: 1.65;
+      margin-top: 20px;
+      margin-bottom: 32px;
+    }
+
+    .contact-fields { display: grid; gap: 12px; }
+
+    .contact-field {
+      display: grid;
+      grid-template-columns: 100px 1fr;
+      align-items: center;
+      gap: 12px;
+      padding: 14px 18px;
+      background: var(--steel);
+      border: 1px solid var(--rim);
+    }
+
+    .field-label {
+      font-family: var(--mono);
+      font-size: 0.67rem;
+      color: var(--dim);
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+
+    .field-val { font-size: 0.95rem; color: var(--text); }
+    .field-val a { color: var(--gold); }
+    .field-val a:hover { color: var(--gold2); }
+
+    .contact-right {
+      background: var(--gold);
+      padding: 40px 36px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .contact-right h3 {
+      font-family: var(--cond);
+      font-weight: 800;
+      font-size: 2rem;
+      text-transform: uppercase;
+      color: #000;
+      line-height: 1;
+      margin-bottom: 16px;
+    }
+
+    .contact-right p {
+      color: rgba(0,0,0,0.65);
+      font-size: 0.97rem;
+      line-height: 1.6;
+      margin-bottom: 32px;
+    }
+
+    .btn-dark {
+      display: inline-flex;
+      align-items: center;
+      height: 52px;
+      padding: 0 28px;
+      background: #000;
+      color: var(--gold);
+      font-family: var(--cond);
+      font-weight: 700;
+      font-size: 0.95rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      transition: 0.15s;
+      align-self: flex-start;
+      clip-path: polygon(0 0, 100% 0, 100% 75%, 94% 100%, 0 100%);
+    }
+
+    .btn-dark:hover { background: #1a1a1a; color: var(--gold2); }
+
+    /* ── FOOTER ── */
+    .footer {
+      padding: 28px 0;
+      background: var(--black);
+      border-top: 1px solid var(--rim);
+    }
+
+    .footer-inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+      flex-wrap: wrap;
+    }
+
+    .footer-left {
+      font-family: var(--mono);
+      font-size: 0.72rem;
+      color: var(--dim);
+      letter-spacing: 0.05em;
+    }
+
+    .footer-right {
+      font-family: var(--mono);
+      font-size: 0.72rem;
+      color: var(--dim);
+      display: flex;
+      gap: 20px;
+    }
+
+    /* ── NEWSLETTER ── */
+    .newsletter-strip {
+      background: var(--panel);
+      border-bottom: 1px solid var(--rim);
+      position: relative;
+      z-index: 1;
+    }
+
+    .newsletter-inner {
+      display: grid;
+      grid-template-columns: 1fr 420px;
+      gap: 1px;
+      background: var(--rim);
+    }
+
+    .newsletter-left {
+      background: var(--dark);
+      padding: 32px 36px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    .newsletter-eyebrow {
+      font-family: var(--mono);
+      font-size: 0.68rem;
+      color: var(--violet2);
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .newsletter-eyebrow::before {
+      content: '';
+      display: block;
+      width: 18px;
+      height: 1px;
+      background: var(--violet2);
+    }
+
+    .newsletter-left h3 {
+      font-family: var(--cond);
+      font-weight: 800;
+      font-size: 1.5rem;
+      letter-spacing: 0.03em;
+      text-transform: uppercase;
+      color: #fff;
+      line-height: 1.1;
+      margin-bottom: 8px;
+    }
+
+    .newsletter-left h3 span { color: var(--gold); }
+
+    .newsletter-left p {
+      color: var(--muted);
+      font-size: 0.92rem;
+      line-height: 1.6;
+      max-width: 50ch;
+      text-align: left;
+    }
+
+    .newsletter-right {
+      background: var(--steel);
+      padding: 32px 28px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .latest-issue {
+      display: block;
+      border: 1px solid var(--rim);
+      background: var(--panel);
+      padding: 18px 20px;
+      transition: border-color 0.2s;
+    }
+
+    .latest-issue:hover { border-color: var(--gold); }
+
+    .issue-label {
+      font-family: var(--mono);
+      font-size: 0.65rem;
+      color: var(--dim);
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+
+    .issue-title {
+      font-family: var(--cond);
+      font-weight: 700;
+      font-size: 1rem;
+      letter-spacing: 0.03em;
+      text-transform: uppercase;
+      color: var(--text);
+      line-height: 1.3;
+      margin-bottom: 6px;
+    }
+
+    .issue-meta {
+      font-family: var(--mono);
+      font-size: 0.72rem;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+
+    .issue-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-family: var(--mono);
+      font-size: 0.7rem;
+      color: var(--gold);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      margin-top: 10px;
+      transition: color 0.15s;
+    }
+
+    .issue-link:hover { color: var(--gold2); }
+
+    .btn-subscribe {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      height: 48px;
+      background: var(--violet);
+      color: #fff;
+      font-family: var(--cond);
+      font-weight: 700;
+      font-size: 0.9rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      transition: background 0.15s;
+      clip-path: polygon(0 0, 100% 0, 100% 72%, 96% 100%, 0 100%);
+    }
+
+    .btn-subscribe:hover { background: var(--violet2); color: #000; }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 900px) {
+      .hero-grid { grid-template-columns: 1fr; }
+      .hero-right { border-top: 1px solid var(--rim); }
+      .hero-left { border-right: none; padding: 40px 0; }
+      .newsletter-inner { grid-template-columns: 1fr; }
+      .service-grid,
+      .philosophy-grid,
+      .about-grid,
+      .contact-grid { grid-template-columns: 1fr; }
+      .stats-row { grid-template-columns: repeat(2, 1fr); }
+      .status-bar { display: none; }
+      .menu a span { display: none; }
+    }
+
+    @media (max-width: 600px) {
+      .stats-row { grid-template-columns: 1fr; }
+      h1 { font-size: 2.8rem; }
+      .menu a { padding: 0 14px; font-size: 0.8rem; }
+    }
+
+    /* ── ENTRY ANIMATIONS ── */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(18px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .hero-left > * { animation: fadeUp 0.5s ease both; }
+    .hero-left .sys-label { animation-delay: 0.05s; }
+    .hero-left h1         { animation-delay: 0.12s; }
+    .hero-left .lead      { animation-delay: 0.2s; }
+    .hero-left .btn-row   { animation-delay: 0.28s; }
+  </style>
+</head>
+<body>
+
+  <!-- NAV -->
+  <nav class="nav">
+    <div class="wrap nav-inner">
+      <div class="brand">
+        <div class="logo-block">
+          <!-- Zodiac / star symbol -->
+          <svg viewBox="0 0 28 28" fill="none" stroke="#000" stroke-width="1.8">
+            <circle cx="14" cy="14" r="10"/>
+            <line x1="14" y1="4" x2="14" y2="24"/>
+            <line x1="4" y1="14" x2="24" y2="14"/>
+            <line x1="7" y1="7" x2="21" y2="21"/>
+            <line x1="21" y1="7" x2="7" y2="21"/>
+          </svg>
+        </div>
+        <div class="brand-text">
+          <div class="brand-name">Aung Kyaw</div>
+          <div class="brand-tag">AI-Augmented Astrologer · Cosmic Timing</div>
+        </div>
+      </div>
+      <div class="status-bar">
+        <div class="status-dot">
+          <div class="dot"></div>
+          <span>READINGS AVAILABLE</span>
+        </div>
+        <span>MEL · VIC · AUS</span>
+      </div>
+      <nav class="menu">
+        <a href="#services">Services</a>
+        <a href="#philosophy">Philosophy</a>
+        <a href="#about">About</a>
+        <a href="#contact">Contact</a>
+        <a href="mailto:moe@mojocontrolsolutions.com.au" class="cta-link">Book a Reading</a>
+      </nav>
+    </div>
+  </nav>
+
+  <!-- HERO -->
+  <header class="hero">
+    <div class="wrap">
+      <div class="hero-grid">
+        <div class="hero-left">
+          <div class="sys-label">AI-Augmented Practice · Melbourne, Australia</div>
+          <h1>Cosmic <em>Timing</em><br>Insights &amp;<br>Life Cycles</h1>
+          <p class="lead">
+            Astrology is not destiny — it is a symbolic timing system that reveals patterns,
+            cycles, and periods of opportunity or challenge. Combining 9 years of astrological
+            study with modern analytical thinking and AI-assisted tools.
+          </p>
+          <div class="btn-row">
+            <a class="btn btn-gold" href="#contact">Book a Reading</a>
+            <a class="btn btn-ghost" href="#services">View Services</a>
+          </div>
+        </div>
+
+        <div class="hero-right">
+          <div class="panel-header">// PRACTICE SPECIFICATION</div>
+          <div class="spec-list">
+            <div class="spec-row">
+              <span class="spec-key">Study Since</span>
+              <span class="spec-val hi">2016</span>
+            </div>
+            <div class="spec-row">
+              <span class="spec-key">Systems</span>
+              <span class="spec-val">Western &amp; Vedic</span>
+            </div>
+            <div class="spec-row">
+              <span class="spec-key">Zodiac</span>
+              <span class="spec-val vl">Tropical + Sidereal</span>
+            </div>
+            <div class="spec-row">
+              <span class="spec-key">Base</span>
+              <span class="spec-val">Melbourne, VIC</span>
+            </div>
+            <div class="spec-row">
+              <span class="spec-key">Approach</span>
+              <span class="spec-val ok">Analytical + AI</span>
+            </div>
+            <div class="spec-row">
+              <span class="spec-key">Delivery</span>
+              <span class="spec-val">Written + Remote</span>
+            </div>
+          </div>
+          <div class="readout-box">
+            <div class="readout-label">// Years of Astrological Study</div>
+            <div class="readout-val">9<span class="readout-unit">YRS</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- TICKER -->
+  <div class="ticker" aria-hidden="true">
+    <div class="ticker-label">OFFERINGS</div>
+    <div class="ticker-track">
+      <span class="ticker-item">Birth Chart Analysis</span>
+      <span class="ticker-sep">✦</span>
+      <span class="ticker-item">Written Forecasts</span>
+      <span class="ticker-sep">✦</span>
+      <span class="ticker-item">Life-Cycle Reports</span>
+      <span class="ticker-sep">✦</span>
+      <span class="ticker-item">Western Astrology</span>
+      <span class="ticker-sep">✦</span>
+      <span class="ticker-item">Vedic Astrology</span>
+      <span class="ticker-sep">✦</span>
+      <span class="ticker-item">Planetary Cycles</span>
+      <span class="ticker-sep">✦</span>
+      <span class="ticker-item">AI-Assisted Analysis</span>
+      <span class="ticker-sep">✦</span>
+      <span class="ticker-item">Timing &amp; Opportunity</span>
+      <span class="ticker-sep">✦</span>
+      <span class="ticker-item">Birth Chart Analysis</span>
+      <span class="ticker-sep">✦</span>
+      <span class="ticker-item">Written Forecasts</span>
+      <span class="ticker-sep">✦</span>
+      <span class="ticker-item">Life-Cycle Reports</span>
+      <span class="ticker-sep">✦</span>
+      <span class="ticker-item">Western Astrology</span>
+      <span class="ticker-sep">✦</span>
+      <span class="ticker-item">Vedic Astrology</span>
+      <span class="ticker-sep">✦</span>
+      <span class="ticker-item">Planetary Cycles</span>
+      <span class="ticker-sep">✦</span>
+      <span class="ticker-item">AI-Assisted Analysis</span>
+      <span class="ticker-sep">✦</span>
+      <span class="ticker-item">Timing &amp; Opportunity</span>
+      <span class="ticker-sep">✦</span>
+    </div>
+  </div>
+
+  <!-- NEWSLETTER -->
+  <div class="newsletter-strip">
+    <div class="wrap">
+      <div class="newsletter-inner">
+        <div class="newsletter-left">
+          <div class="newsletter-eyebrow">Free Newsletter · Beehiiv</div>
+          <h3>The Control Failure <span>Analyst</span></h3>
+          <p>Weekly planetary-day forecasts and cosmic timing insights — delivered straight to your inbox. Explore how ancient astrological cycles intersect with modern life.</p>
+          <a class="btn-subscribe" href="https://the-control-failure-analyst.beehiiv.com" target="_blank" rel="noopener" style="margin-top:20px; text-decoration:none; max-width:240px;">
+            ✦ Subscribe Free
+          </a>
+        </div>
+        <div class="newsletter-right">
+          <div class="issue-label">// Latest Issue — Week 11</div>
+          <a class="latest-issue" href="https://the-control-failure-analyst.beehiiv.com/p/why-the-world-has-a-7-day-week-and-what-it-means-for-your-week" target="_blank" rel="noopener">
+            <div class="issue-title">Why the World Has a 7-Day Week — and What It Means for Your Week</div>
+            <div class="issue-meta">Planetary-day forecast · Week 11 · 2026</div>
+            <span class="issue-link">Read on Beehiiv →</span>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <main>
+
+    <!-- SERVICES -->
+    <section id="services">
+      <div class="wrap">
+        <div class="section-meta">
+          <span class="section-num">// 01</span>
+          <h2>Core <span>Services</span></h2>
+        </div>
+        <div class="service-grid">
+
+          <article class="service-card">
+            <div class="service-num">SVC-001</div>
+            <div class="service-icon">
+              <!-- Birth chart / circle -->
+              <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+                <circle cx="12" cy="12" r="9"/>
+                <line x1="12" y1="3" x2="12" y2="21"/>
+                <line x1="3" y1="12" x2="21" y2="12"/>
+                <circle cx="12" cy="12" r="2"/>
+              </svg>
+            </div>
+            <h3>Birth Chart Analysis</h3>
+            <p>A detailed interpretation of your natal chart — the planetary positions at the moment of your birth — revealing your core patterns, strengths, and life themes.</p>
+            <ul class="feat-list">
+              <li>Natal chart interpretation</li>
+              <li>Planetary placements &amp; aspects</li>
+              <li>Western or Vedic framework</li>
+              <li>Delivered as written report</li>
+            </ul>
+            <span class="price-tag">$50 – $100</span>
+          </article>
+
+          <article class="service-card">
+            <div class="service-num">SVC-002</div>
+            <div class="service-icon">
+              <!-- Calendar / forecast -->
+              <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+                <rect x="3" y="4" width="18" height="18" rx="2"/>
+                <line x1="16" y1="2" x2="16" y2="6"/>
+                <line x1="8" y1="2" x2="8" y2="6"/>
+                <line x1="3" y1="10" x2="21" y2="10"/>
+                <polyline points="8 14 10.5 16.5 16 11"/>
+              </svg>
+            </div>
+            <h3>Written Forecast</h3>
+            <p>A forward-looking transit analysis covering upcoming planetary cycles and how they are likely to influence specific areas of your life over a defined period.</p>
+            <ul class="feat-list">
+              <li>Short to medium-range forecasts</li>
+              <li>Planetary transit mapping</li>
+              <li>Opportunity &amp; challenge windows</li>
+              <li>Personalised written delivery</li>
+            </ul>
+            <span class="price-tag">$30 – $60</span>
+          </article>
+
+          <article class="service-card">
+            <div class="service-num">SVC-003</div>
+            <div class="service-icon">
+              <!-- Timeline / cycle -->
+              <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+                <path d="M3 12 Q6 6 12 6 Q18 6 21 12 Q18 18 12 18 Q6 18 3 12Z"/>
+                <circle cx="12" cy="12" r="2.5"/>
+                <line x1="12" y1="3" x2="12" y2="6"/>
+                <line x1="12" y1="18" x2="12" y2="21"/>
+              </svg>
+            </div>
+            <h3>Full Life-Cycle Report</h3>
+            <p>A comprehensive long-range analysis of your major life cycles, examining the broader planetary patterns that shape your decade-by-decade journey and key turning points.</p>
+            <ul class="feat-list">
+              <li>Major cycle &amp; progression analysis</li>
+              <li>Life-stage themes &amp; transitions</li>
+              <li>Saturn, Jupiter &amp; outer planet cycles</li>
+              <li>Extended written report format</li>
+            </ul>
+            <span class="price-tag">$120+</span>
+          </article>
+
+        </div>
+
+        <!-- Philosophy quick-panels -->
+        <div class="philosophy-grid">
+          <div class="phil-cell">
+            <div class="phil-title">Western Astrology</div>
+            <p>Based on the tropical zodiac, centred on Earth and the seasonal cycle of the Sun. Closer to lived human experience for many practitioners, with a rich tradition of psychological and character interpretation.</p>
+          </div>
+          <div class="phil-cell accent">
+            <div class="phil-title">Vedic Astrology</div>
+            <p>Based on the sidereal zodiac, aligned with the actual constellations in the sky. Emphasises precise astronomical positioning and carries deep roots in the Indian sub-continent's interpretative tradition.</p>
+          </div>
+        </div>
+
+        <!-- Stats -->
+        <div class="stats-row">
+          <div class="stat-cell">
+            <div class="stat-num">2016</div>
+            <div class="stat-desc">Began systematic<br>astrological study</div>
+          </div>
+          <div class="stat-cell">
+            <div class="stat-num">2x</div>
+            <div class="stat-desc">Tropical &amp;<br>Sidereal systems</div>
+          </div>
+          <div class="stat-cell">
+            <div class="stat-num">AI</div>
+            <div class="stat-desc">Modern tools +<br>traditional knowledge</div>
+          </div>
+          <div class="stat-cell">
+            <div class="stat-num">35+</div>
+            <div class="stat-desc">Yrs analytical<br>professional career</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- PHILOSOPHY / APPROACH -->
+    <section id="philosophy">
+      <div class="wrap">
+        <div class="section-meta">
+          <span class="section-num">// 02</span>
+          <h2>The <span>Approach</span></h2>
+        </div>
+        <div class="about-grid">
+          <div class="about-left">
+            <p>
+              Astrology is not destiny. It is a symbolic system that helps us understand the timing
+              of opportunities and challenges in life. The movements of the planets do not control
+              our choices, but they can highlight periods when certain energies become stronger.
+            </p>
+            <p>
+              By understanding these cycles, we can make wiser decisions and better prepare ourselves
+              for what life presents. Used thoughtfully, these insights can help us become more aware
+              of timing and make the most of the opportunities that appear along our path.
+            </p>
+            <div class="tag-row">
+              <span class="tag">Timing Analysis</span>
+              <span class="tag">Natal Charts</span>
+              <span class="tag">Planetary Cycles</span>
+              <span class="tag">Pattern Recognition</span>
+              <span class="tag">Transits</span>
+              <span class="tag">Western</span>
+              <span class="tag">Vedic</span>
+              <span class="tag">AI-Augmented</span>
+            </div>
+          </div>
+          <div class="about-right">
+            <div class="capability-block">
+              <div class="cap-title">Analytical, Not Mystical</div>
+              <div class="cap-desc">Rather than treating astrology as purely mystical, the approach treats it as a symbolic timing system — one that reveals patterns, cycles, and periods of opportunity or challenge through structured analysis.</div>
+            </div>
+            <div class="capability-block">
+              <div class="cap-title">AI-Assisted Insights</div>
+              <div class="cap-desc">Traditional astrological knowledge is combined with modern AI tools to explore planetary cycles in a structured and thoughtful way, enabling richer analysis and clearer communication of complex patterns.</div>
+            </div>
+            <div class="capability-block">
+              <div class="cap-title">System Consistency</div>
+              <div class="cap-desc">Western and Vedic frameworks are not mixed within the same analysis. Each follows a different astronomical and interpretative tradition, and their integrity is preserved in every reading.</div>
+            </div>
+          </div>
+        </div>
+        <div class="disclaimer-bar">
+          <span class="disclaimer-label">⚠ Disclaimer</span>
+          <span class="disclaimer-text">Astrology readings are provided for personal insight and educational purposes only, and should not replace professional financial, legal, or medical advice.</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ABOUT -->
+    <section id="about">
+      <div class="wrap">
+        <div class="section-meta">
+          <span class="section-num">// 03</span>
+          <h2>About <span>Aung Kyaw</span></h2>
+        </div>
+        <div class="about-grid">
+          <div class="about-left">
+            <p>
+              I began studying astrology in 2016, exploring both Sidereal and Tropical zodiac systems
+              through Vedic and Western astrology traditions. My interest began with two purposes:
+              as a field of personal research and learning, and as a retirement activity where I
+              could share insights and observations with others.
+            </p>
+            <p>
+              In my professional career, I have over <strong style="color:var(--text)">35 years of experience as an Electrical
+              and Control Systems Consultant</strong>, working in complex industrial environments.
+              This work relies heavily on analytical thinking, pattern recognition, and system
+              behaviour analysis — skills that naturally transferred to astrology.
+            </p>
+            <div class="tag-row">
+              <span class="tag">Melbourne, VIC</span>
+              <span class="tag">Electrical Engineering</span>
+              <span class="tag">Control Systems</span>
+              <span class="tag">35+ Yrs Industry</span>
+              <span class="tag">Pattern Analysis</span>
+              <span class="tag">AI Tools</span>
+            </div>
+          </div>
+          <div class="about-right">
+            <div class="capability-block">
+              <div class="cap-title">Engineering Background</div>
+              <div class="cap-desc">Over 35 years as an Electrical and Control Systems Consultant in complex industrial environments, bringing rigorous analytical discipline to every astrological interpretation.</div>
+            </div>
+            <div class="capability-block">
+              <div class="cap-title">Dual-System Knowledge</div>
+              <div class="cap-desc">Studied both Western (tropical) and Vedic (sidereal) traditions since 2016, allowing informed guidance on which framework may resonate most clearly with each individual's experience.</div>
+            </div>
+            <div class="capability-block">
+              <div class="cap-title">Research-Driven Practice</div>
+              <div class="cap-desc">Astrology as a field of ongoing personal research — combining classical knowledge with modern analytical tools and AI-assisted workflows to deliver thoughtful, well-structured readings.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- CONTACT -->
+    <section id="contact">
+      <div class="wrap">
+        <div class="section-meta">
+          <span class="section-num">// 04</span>
+          <h2>Book a <span>Reading</span></h2>
+        </div>
+        <div class="contact-grid">
+          <div class="contact-left">
+            <p>
+              Interested in exploring your birth chart, an upcoming forecast, or a full life-cycle
+              analysis? Get in touch directly — all enquiries and readings are handled personally.
+            </p>
+            <div class="contact-fields">
+              <div class="contact-field">
+                <span class="field-label">Email</span>
+                <span class="field-val"><a href="mailto:moe@mojocontrolsolutions.com.au">moe@mojocontrolsolutions.com.au</a></span>
+              </div>
+              <div class="contact-field">
+                <span class="field-label">Location</span>
+                <span class="field-val">Melbourne, Victoria, Australia</span>
+              </div>
+              <div class="contact-field">
+                <span class="field-label">Delivery</span>
+                <span class="field-val">Written Reports · Remote</span>
+              </div>
+              <div class="contact-field">
+                <span class="field-label">Response</span>
+                <span class="field-val">Within 1–2 business days</span>
+              </div>
+            </div>
+          </div>
+          <div class="contact-right">
+            <div>
+              <h3>Ready to explore your chart?</h3>
+              <p>Whether it's a birth chart reading, a forecast for the year ahead, or a deep dive into your life cycles — reach out and let's discuss what would be most useful for you.</p>
+            </div>
+            <a class="btn-dark" href="mailto:moe@mojocontrolsolutions.com.au">Send an Email →</a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- FOOTER -->
+  <footer class="footer">
+    <div class="wrap footer-inner">
+      <div class="footer-left">
+        © 2025 AUNG KYAW · AI-AUGMENTED ASTROLOGER · MELBOURNE VIC AUS &nbsp;·&nbsp; <a href="https://the-control-failure-analyst.beehiiv.com" target="_blank" rel="noopener" style="color:var(--violet2);">✦ Newsletter</a>
+      </div>
+      <div class="footer-right">
+        <a hre
