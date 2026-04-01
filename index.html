@@ -1,44 +1,58 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>MOJO Control Solutions — Industrial Automation, Alarm Management & Control Systems Engineering</title>
-  <meta name="description" content="MOJO Control Solutions — 37+ years of field expertise in industrial automation, PLC/SCADA/DCS, alarm management (ISA-18.2, EEMUA 191), and commissioning. Australia-wide. Home of MOJO AlarmIQ alarm intelligence platform." />
-  <meta name="keywords" content="industrial automation, alarm management, ISA-18.2, EEMUA 191, PLC SCADA DCS, control systems engineering, commissioning, mining automation, alarm management Australia, AlarmIQ" />
+  <meta name="description"
+    content="MOJO Control Solutions — 37+ years of field expertise in industrial automation, PLC/SCADA/DCS, alarm management (ISA-18.2, EEMUA 191), and commissioning. Australia-wide. Home of MOJO AlarmIQ alarm intelligence platform." />
+  <meta name="keywords"
+    content="industrial automation, alarm management, ISA-18.2, EEMUA 191, PLC SCADA DCS, control systems engineering, commissioning, mining automation, alarm management Australia, AlarmIQ" />
   <meta name="author" content="Aung Moe Kyaw — MOJO Control Solutions" />
   <meta property="og:title" content="MOJO Control Solutions — Industrial Automation & Alarm Management" />
-  <meta property="og:description" content="37+ years of field-proven control systems engineering. Home of MOJO AlarmIQ — alarm intelligence platform for mining & industrial operations." />
+  <meta property="og:description"
+    content="37+ years of field-proven control systems engineering. Home of MOJO AlarmIQ — alarm intelligence platform for mining & industrial operations." />
   <meta property="og:type" content="website" />
   <meta property="og:url" content="https://mojocontrolsolutions.com.au" />
   <link rel="canonical" href="https://mojocontrolsolutions.com.au" />
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;500;600;700;800&family=Barlow:wght@400;500;600&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;500;600;700;800&family=Barlow:wght@400;500;600&family=Share+Tech+Mono&display=swap"
+    rel="stylesheet">
   <style>
     :root {
-      --black:   #080b0e;
-      --dark:    #0e1318;
-      --steel:   #141b22;
-      --panel:   #1a2330;
-      --rim:     #253040;
-      --line:    rgba(255,255,255,0.08);
-      --line2:   rgba(255,255,255,0.05);
-      --text:    #dce8f0;
-      --muted:   #7a95a8;
-      --dim:     #3d5565;
-      --amber:   #f5a623;
-      --amber2:  #ffcc66;
-      --green:   #4ecb8a;
-      --red:     #e05252;
-      --max:     1160px;
-      --mono:    'Share Tech Mono', monospace;
-      --cond:    'Barlow Condensed', sans-serif;
-      --body:    'Barlow', sans-serif;
+      --black: #080b0e;
+      --dark: #0e1318;
+      --steel: #141b22;
+      --panel: #1a2330;
+      --rim: #253040;
+      --line: rgba(255, 255, 255, 0.08);
+      --line2: rgba(255, 255, 255, 0.05);
+      --text: #dce8f0;
+      --muted: #7a95a8;
+      --dim: #3d5565;
+      --amber: #f5a623;
+      --amber2: #ffcc66;
+      --green: #4ecb8a;
+      --red: #e05252;
+      --max: 1160px;
+      --mono: 'Share Tech Mono', monospace;
+      --cond: 'Barlow Condensed', sans-serif;
+      --body: 'Barlow', sans-serif;
     }
 
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
 
-    html { scroll-behavior: smooth; }
+    html {
+      scroll-behavior: smooth;
+    }
 
     body {
       font-family: var(--body);
@@ -54,14 +68,17 @@
       position: fixed;
       inset: 0;
       background-image:
-        linear-gradient(rgba(255,255,255,0.015) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(255,255,255,0.015) 1px, transparent 1px);
+        linear-gradient(rgba(255, 255, 255, 0.015) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.015) 1px, transparent 1px);
       background-size: 40px 40px;
       pointer-events: none;
       z-index: 0;
     }
 
-    a { color: inherit; text-decoration: none; }
+    a {
+      color: inherit;
+      text-decoration: none;
+    }
 
     .wrap {
       width: min(calc(100% - 40px), var(--max));
@@ -157,8 +174,15 @@
     }
 
     @keyframes pulse {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0.4; }
+
+      0%,
+      100% {
+        opacity: 1;
+      }
+
+      50% {
+        opacity: 0.4;
+      }
     }
 
     .menu {
@@ -216,7 +240,7 @@
       right: -100px;
       width: 600px;
       height: 600px;
-      border: 1px solid rgba(245,166,35,0.08);
+      border: 1px solid rgba(245, 166, 35, 0.08);
       border-radius: 50%;
       pointer-events: none;
     }
@@ -306,7 +330,9 @@
       clip-path: polygon(0 0, 100% 0, 100% 70%, 94% 100%, 0 100%);
     }
 
-    .btn-amber:hover { background: var(--amber2); }
+    .btn-amber:hover {
+      background: var(--amber2);
+    }
 
     .btn-ghost {
       background: transparent;
@@ -353,7 +379,9 @@
       gap: 12px;
     }
 
-    .spec-row:last-child { border-bottom: none; }
+    .spec-row:last-child {
+      border-bottom: none;
+    }
 
     .spec-key {
       font-family: var(--mono);
@@ -372,8 +400,13 @@
       text-align: right;
     }
 
-    .spec-val.hi { color: var(--amber); }
-    .spec-val.ok { color: var(--green); }
+    .spec-val.hi {
+      color: var(--amber);
+    }
+
+    .spec-val.ok {
+      color: var(--green);
+    }
 
     .readout-box {
       margin-top: 20px;
@@ -437,8 +470,13 @@
     }
 
     @keyframes scroll {
-      from { transform: translateX(0); }
-      to { transform: translateX(-50%); }
+      from {
+        transform: translateX(0);
+      }
+
+      to {
+        transform: translateX(-50%);
+      }
     }
 
     .ticker-item {
@@ -453,7 +491,7 @@
     }
 
     .ticker-sep {
-      color: rgba(0,0,0,0.35);
+      color: rgba(0, 0, 0, 0.35);
       padding: 0 4px;
     }
 
@@ -482,7 +520,9 @@
       line-height: 1;
     }
 
-    h2 span { color: var(--amber); }
+    h2 span {
+      color: var(--amber);
+    }
 
     .section-num {
       font-family: var(--mono);
@@ -520,8 +560,13 @@
       transition: transform 0.25s ease;
     }
 
-    .service-card:hover { background: var(--steel); }
-    .service-card:hover::before { transform: scaleX(1); }
+    .service-card:hover {
+      background: var(--steel);
+    }
+
+    .service-card:hover::before {
+      transform: scaleX(1);
+    }
 
     .service-num {
       font-family: var(--mono);
@@ -752,7 +797,7 @@
     }
 
     .contact-right p {
-      color: rgba(0,0,0,0.65);
+      color: rgba(0, 0, 0, 0.65);
       font-size: 0.97rem;
       line-height: 1.6;
       margin-bottom: 32px;
@@ -835,31 +880,63 @@
         grid-template-columns: repeat(2, 1fr);
       }
 
-      .status-bar { display: none; }
+      .status-bar {
+        display: none;
+      }
 
-      .menu a span { display: none; }
+      .menu a span {
+        display: none;
+      }
     }
 
     @media (max-width: 600px) {
-      .stats-row { grid-template-columns: 1fr; }
-      h1 { font-size: 2.8rem; }
-      .menu a { padding: 0 14px; font-size: 0.8rem; min-height: 72px; }
+      .stats-row {
+        grid-template-columns: 1fr;
+      }
+
+      h1 {
+        font-size: 2.8rem;
+      }
+
+      .menu a {
+        padding: 0 14px;
+        font-size: 0.8rem;
+        min-height: 72px;
+      }
     }
 
     /* ── ENTRY ANIMATIONS ── */
     @keyframes fadeUp {
-      from { opacity: 0; transform: translateY(18px); }
-      to   { opacity: 1; transform: translateY(0); }
+      from {
+        opacity: 0;
+        transform: translateY(18px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
     }
 
-    .hero-left > * {
+    .hero-left>* {
       animation: fadeUp 0.5s ease both;
     }
 
-    .hero-left .sys-label { animation-delay: 0.05s; }
-    .hero-left h1         { animation-delay: 0.12s; }
-    .hero-left .lead      { animation-delay: 0.2s; }
-    .hero-left .btn-row   { animation-delay: 0.28s; }
+    .hero-left .sys-label {
+      animation-delay: 0.05s;
+    }
+
+    .hero-left h1 {
+      animation-delay: 0.12s;
+    }
+
+    .hero-left .lead {
+      animation-delay: 0.2s;
+    }
+
+    .hero-left .btn-row {
+      animation-delay: 0.28s;
+    }
 
     /* ── ALARMIQ SECTION ── */
     .alarmiq-section {
@@ -895,7 +972,9 @@
       margin-bottom: 8px;
     }
 
-    .alarmiq-hero-left h3 span { color: var(--amber); }
+    .alarmiq-hero-left h3 span {
+      color: var(--amber);
+    }
 
     .alarmiq-sub {
       font-family: var(--mono);
@@ -949,9 +1028,17 @@
       font-weight: 700;
     }
 
-    .kpi-val.red   { color: var(--red); }
-    .kpi-val.amber { color: var(--amber); }
-    .kpi-val.green { color: var(--green); }
+    .kpi-val.red {
+      color: var(--red);
+    }
+
+    .kpi-val.amber {
+      color: var(--amber);
+    }
+
+    .kpi-val.green {
+      color: var(--green);
+    }
 
     .alarmiq-features {
       display: grid;
@@ -972,7 +1059,9 @@
     .alarmiq-feat::before {
       content: '';
       position: absolute;
-      top: 0; left: 0; right: 0;
+      top: 0;
+      left: 0;
+      right: 0;
       height: 2px;
       background: var(--red);
       transform: scaleX(0);
@@ -980,8 +1069,13 @@
       transition: transform 0.25s ease;
     }
 
-    .alarmiq-feat:hover { background: var(--steel); }
-    .alarmiq-feat:hover::before { transform: scaleX(1); }
+    .alarmiq-feat:hover {
+      background: var(--steel);
+    }
+
+    .alarmiq-feat:hover::before {
+      transform: scaleX(1);
+    }
 
     .feat-code {
       font-family: var(--mono);
@@ -1057,7 +1151,7 @@
     }
 
     .alarmiq-cta-left p {
-      color: rgba(255,255,255,0.75);
+      color: rgba(255, 255, 255, 0.75);
       font-size: 0.9rem;
       line-height: 1.6;
       margin-bottom: 24px;
@@ -1080,7 +1174,9 @@
       clip-path: polygon(0 0, 100% 0, 100% 75%, 94% 100%, 0 100%);
     }
 
-    .btn-white:hover { background: #f0f0f0; }
+    .btn-white:hover {
+      background: #f0f0f0;
+    }
 
     .alarmiq-cta-right {
       background: var(--panel);
@@ -1164,7 +1260,9 @@
       border-bottom: 1px solid var(--line2);
     }
 
-    .cap-row:last-child { border-bottom: none; }
+    .cap-row:last-child {
+      border-bottom: none;
+    }
 
     .cap-key {
       font-family: var(--mono);
@@ -1181,7 +1279,9 @@
       line-height: 1.5;
     }
 
-    .cap-val.amber { color: var(--amber); }
+    .cap-val.amber {
+      color: var(--amber);
+    }
 
     .industry-grid {
       display: grid;
@@ -1210,11 +1310,13 @@
     }
 
     @media (max-width: 900px) {
+
       .alarmiq-hero,
       .alarmiq-cta,
       .cap-grid {
         grid-template-columns: 1fr;
       }
+
       .alarmiq-features {
         grid-template-columns: 1fr;
       }
@@ -1226,13 +1328,23 @@
       transform: translateY(24px);
       transition: opacity 0.55s ease, transform 0.55s ease;
     }
+
     .reveal.visible {
       opacity: 1;
       transform: translateY(0);
     }
-    .reveal-delay-1 { transition-delay: 0.1s; }
-    .reveal-delay-2 { transition-delay: 0.2s; }
-    .reveal-delay-3 { transition-delay: 0.3s; }
+
+    .reveal-delay-1 {
+      transition-delay: 0.1s;
+    }
+
+    .reveal-delay-2 {
+      transition-delay: 0.2s;
+    }
+
+    .reveal-delay-3 {
+      transition-delay: 0.3s;
+    }
 
     /* ── TRUST STRIP ── */
     .trust-strip {
@@ -1350,7 +1462,9 @@
       justify-self: start;
     }
 
-    .form-submit:hover { background: var(--amber2); }
+    .form-submit:hover {
+      background: var(--amber2);
+    }
 
     .form-note {
       font-family: var(--mono);
@@ -1371,7 +1485,10 @@
       letter-spacing: 0.05em;
       transition: color 0.15s;
     }
-    .linkedin-link:hover { color: var(--amber); }
+
+    .linkedin-link:hover {
+      color: var(--amber);
+    }
 
     /* ── CHECKLIST DOWNLOAD CTA ── */
     .checklist-banner {
@@ -1432,51 +1549,63 @@
     }
 
     @media (max-width: 600px) {
-      .form-row { grid-template-columns: 1fr; }
-      .checklist-banner { flex-direction: column; align-items: flex-start; }
+      .form-row {
+        grid-template-columns: 1fr;
+      }
+
+      .checklist-banner {
+        flex-direction: column;
+        align-items: flex-start;
+      }
     }
+
     p {
       text-align: justify;
       hyphens: auto;
     }
   </style>
 </head>
+
 <body>
 
   <!-- NAV -->
   <nav class="nav">
     <div class="wrap nav-inner">
       <div class="brand">
-                <div class="logo-block" style="background:transparent;padding:4px 0;width:auto;min-height:72px;clip-path:none;display:flex;align-items:center;">
+        <div class="logo-block"
+          style="background:transparent;padding:4px 0;width:auto;min-height:72px;clip-path:none;display:flex;align-items:center;">
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 64" height="60" style="display:block;">
             <!-- M -->
-            <text x="0" y="50" font-family="'Barlow Condensed',sans-serif" font-weight="800" font-size="54" fill="#ffffff" letter-spacing="-2">M</text>
+            <text x="0" y="50" font-family="'Barlow Condensed',sans-serif" font-weight="800" font-size="54"
+              fill="#ffffff" letter-spacing="-2">M</text>
             <!-- Gear (O replacement) -->
             <g transform="translate(68,32)">
               <!-- Outer gear teeth -->
-              <circle cx="0" cy="0" r="18" fill="#f5a623"/>
+              <circle cx="0" cy="0" r="18" fill="#f5a623" />
               <g fill="#f5a623">
-                <rect x="-4" y="-22" width="8" height="9" rx="2"/>
-                <rect x="-4" y="13" width="8" height="9" rx="2"/>
-                <rect x="13" y="-4" width="9" height="8" rx="2"/>
-                <rect x="-22" y="-4" width="9" height="8" rx="2"/>
+                <rect x="-4" y="-22" width="8" height="9" rx="2" />
+                <rect x="-4" y="13" width="8" height="9" rx="2" />
+                <rect x="13" y="-4" width="9" height="8" rx="2" />
+                <rect x="-22" y="-4" width="9" height="8" rx="2" />
                 <g transform="rotate(45)">
-                  <rect x="-4" y="-22" width="8" height="9" rx="2"/>
-                  <rect x="-4" y="13" width="8" height="9" rx="2"/>
-                  <rect x="13" y="-4" width="9" height="8" rx="2"/>
-                  <rect x="-22" y="-4" width="9" height="8" rx="2"/>
+                  <rect x="-4" y="-22" width="8" height="9" rx="2" />
+                  <rect x="-4" y="13" width="8" height="9" rx="2" />
+                  <rect x="13" y="-4" width="9" height="8" rx="2" />
+                  <rect x="-22" y="-4" width="9" height="8" rx="2" />
                 </g>
               </g>
               <!-- Inner hole -->
-              <circle cx="0" cy="0" r="9" fill="#0e1318"/>
+              <circle cx="0" cy="0" r="9" fill="#0e1318" />
               <!-- Glow -->
-              <circle cx="0" cy="0" r="18" fill="none" stroke="#ffcc66" stroke-width="1" opacity="0.4"/>
+              <circle cx="0" cy="0" r="18" fill="none" stroke="#ffcc66" stroke-width="1" opacity="0.4" />
             </g>
             <!-- JO -->
-            <text x="95" y="50" font-family="'Barlow Condensed',sans-serif" font-weight="800" font-size="54" fill="#ffffff" letter-spacing="-2">JO</text>
+            <text x="95" y="50" font-family="'Barlow Condensed',sans-serif" font-weight="800" font-size="54"
+              fill="#ffffff" letter-spacing="-2">JO</text>
             <!-- CONTROL SOLUTIONS tagline -->
-            <circle cx="2" cy="58" r="3" fill="#f5a623"/>
-            <text x="10" y="62" font-family="'Share Tech Mono',monospace" font-size="9" fill="#7a95a8" letter-spacing="3">CONTROL SOLUTIONS</text>
+            <circle cx="2" cy="58" r="3" fill="#f5a623" />
+            <text x="10" y="62" font-family="'Share Tech Mono',monospace" font-size="9" fill="#7a95a8"
+              letter-spacing="3">CONTROL SOLUTIONS</text>
           </svg>
         </div>
         <div class="brand-text">
@@ -1650,11 +1779,13 @@
             <div class="service-num">SVC-001</div>
             <div class="service-icon">
               <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
-                <rect x="2" y="7" width="20" height="14" rx="1"/><path d="M16 7V5a2 2 0 00-4 0v2M8 11h.01M12 11h.01M16 11h.01M8 15h.01M12 15h.01M16 15h.01"/>
+                <rect x="2" y="7" width="20" height="14" rx="1" />
+                <path d="M16 7V5a2 2 0 00-4 0v2M8 11h.01M12 11h.01M16 11h.01M8 15h.01M12 15h.01M16 15h.01" />
               </svg>
             </div>
             <h3>Industrial Automation</h3>
-            <p>Control system reviews, automation support, and logic analysis based on extensive site experience, focused on practical, fit-for-purpose engineering outcomes.</p>
+            <p>Control system reviews, automation support, and logic analysis based on extensive site experience,
+              focused on practical, fit-for-purpose engineering outcomes.</p>
             <ul class="feat-list">
               <li>PLC and control logic review</li>
               <li>Operational troubleshooting support</li>
@@ -1667,11 +1798,13 @@
             <div class="service-num">SVC-002</div>
             <div class="service-icon">
               <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
-                <path d="M9 3H5a2 2 0 00-2 2v4m6-6h10a2 2 0 012 2v4M9 3v18m0 0h10a2 2 0 002-2V9M9 21H5a2 2 0 01-2-2V9m0 0h18"/>
+                <path
+                  d="M9 3H5a2 2 0 00-2 2v4m6-6h10a2 2 0 012 2v4M9 3v18m0 0h10a2 2 0 002-2V9M9 21H5a2 2 0 01-2-2V9m0 0h18" />
               </svg>
             </div>
             <h3>SCADA &amp; Commissioning</h3>
-            <p>SCADA support, commissioning preparation, and system diagnostics with emphasis on real operating conditions, fault identification, and stable system performance.</p>
+            <p>SCADA support, commissioning preparation, and system diagnostics with emphasis on real operating
+              conditions, fault identification, and stable system performance.</p>
             <ul class="feat-list">
               <li>SCADA and HMI support</li>
               <li>Commissioning readiness assistance</li>
@@ -1684,11 +1817,12 @@
             <div class="service-num">SVC-003</div>
             <div class="service-icon">
               <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
-                <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+                <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
               </svg>
             </div>
             <h3>Engineering Digital Tools</h3>
-            <p>Development of structured digital engineering tools, dashboards, and analytical utilities to support system analysis, documentation, and knowledge transfer.</p>
+            <p>Development of structured digital engineering tools, dashboards, and analytical utilities to support
+              system analysis, documentation, and knowledge transfer.</p>
             <ul class="feat-list">
               <li>Engineering dashboards</li>
               <li>HTML tools and calculators</li>
@@ -1700,11 +1834,16 @@
             <div class="service-num">SVC-004</div>
             <div class="service-icon">
               <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
-                <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/>
+                <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
+                <polyline points="14 2 14 8 20 8" />
+                <line x1="16" y1="13" x2="8" y2="13" />
+                <line x1="16" y1="17" x2="8" y2="17" />
+                <polyline points="10 9 9 9 8 9" />
               </svg>
             </div>
             <h3>IFR Technical Review</h3>
-            <p>Review of control system documentation and narratives (IFR), aligned with ISA-18.2, IEC 61511, and project standards to support compliance and design verification.</p>
+            <p>Review of control system documentation and narratives (IFR), aligned with ISA-18.2, IEC 61511, and
+              project standards to support compliance and design verification.</p>
             <ul class="feat-list">
               <li>Control narrative completeness checks</li>
               <li>Cross-document tag validation</li>
@@ -1749,16 +1888,22 @@
             <div class="alarmiq-sub">PRD-001 · Alarm Intelligence Platform · Mining &amp; Industrial</div>
             <h3>Stop the flood.<br>Fix the <span>bad actors.</span><br>Know your fleet.</h3>
             <p>
-              MOJO AlarmIQ automatically analyses your alarm historian data against ISA-18.2 and EEMUA 191
-              benchmarks — identifying your worst performing alarms, quantifying their production impact,
-              and generating compliance-ready reports in minutes, not days.
+              MOJO AlarmIQ analyses alarm historian data against ISA-18.2 and EEMUA 191
+              benchmarks, identifying poor alarm performance, quantifying operational impact,
+              and generating compliance-ready reports with significantly reduced manual effort.
             </p>
             <p>
-              Built on benchmarks derived from fleet-wide data across 16 identical mine sites.
-              No other alarm analytics platform starts with this depth of validated mining data.
+              Built on benchmark development across multiple large-scale mining operations, providing
+              a validated foundation for mining-specific alarm performance analysis.
+            </p>
+            <p>
+              This capability extends to asset-based analysis of conveyor systems, identifying recurring faults such as
+              belt slip, drift, and trip sequences linked to specific equipment.
             </p>
             <div class="btn-row">
-              <a class="btn btn-amber" href="mailto:moe@mojocontrolsolutions.com.au?subject=AlarmIQ%20Founding%20Customer%20Interest&body=Hi%20Moe%2C%20I'm%20interested%20in%20becoming%20a%20founding%20customer%20for%20MOJO%20AlarmIQ.%20Our%20site%2Foperation%20is%3A">Become a Founding Customer</a>
+              <a class="btn btn-amber"
+                href="mailto:moe@mojocontrolsolutions.com.au?subject=AlarmIQ%20Founding%20Customer%20Interest&body=Hi%20Moe%2C%20I'm%20interested%20in%20becoming%20a%20founding%20customer%20for%20MOJO%20AlarmIQ.%20Our%20site%2Foperation%20is%3A">
+                DISCUSS YOUR SITE</a>
               <a class="btn btn-ghost" href="#contact">Book a Discovery Call</a>
             </div>
           </div>
@@ -1798,7 +1943,8 @@
                 <span class="kpi-val amber">CONV_007_BELT_SLIP</span>
               </div>
             </div>
-            <div style="font-family: var(--mono); font-size: 0.6rem; color: var(--dim); margin-top: 10px; letter-spacing: 0.06em;">
+            <div
+              style="font-family: var(--mono); font-size: 0.6rem; color: var(--dim); margin-top: 10px; letter-spacing: 0.06em;">
               ⚠ SYNTHETIC DEMO DATA — ISA-18.2 ALARM HISTORY FORMAT · LIVE DEPLOYMENTS USE YOUR SITE DATA
             </div>
           </div>
@@ -1808,37 +1954,44 @@
           <div class="alarmiq-feat">
             <div class="feat-code">ALQ-001</div>
             <h4>ISA-18.2 &amp; EEMUA 191 Compliance</h4>
-            <p>Automatic calculation of all KPIs required by ISA-18.2 and EEMUA 191 — alarm rates, flood percentages, acknowledgement rates, and standing alarm counts.</p>
+            <p>Automatic calculation of all KPIs required by ISA-18.2 and EEMUA 191 — alarm rates, flood percentages,
+              acknowledgement rates, and standing alarm counts.</p>
             <span class="alarmiq-badge">Regulatory</span>
           </div>
           <div class="alarmiq-feat">
             <div class="feat-code">ALQ-002</div>
             <h4>Bad Actor Identification</h4>
-            <p>Identifies and ranks chattering, fleeting, and standing alarms based on frequency and operational impact. Gives your maintenance team a prioritised action list.</p>
+            <p>Identifies and ranks chattering, fleeting, and standing alarms based on frequency and operational impact.
+              Gives your maintenance team a prioritised action list.</p>
             <span class="alarmiq-badge amber-badge">Operational</span>
           </div>
           <div class="alarmiq-feat">
             <div class="feat-code">ALQ-003</div>
             <h4>Alarm Flood Analysis</h4>
-            <p>Identifies alarm flood events, traces the root cause first-out alarm, and maps cascade sequences — invaluable for incident investigation and operator training.</p>
+            <p>Identifies alarm flood events, traces the root cause first-out alarm, and maps cascade sequences —
+              invaluable for incident investigation and operator training.</p>
             <span class="alarmiq-badge">Safety</span>
           </div>
           <div class="alarmiq-feat">
             <div class="feat-code">ALQ-004</div>
             <h4>Fleet Benchmarking</h4>
-            <p>Compare alarm performance across multiple identical sites simultaneously. Identify your best and worst performing sites — and transfer best practice across your fleet.</p>
+            <p>Compare alarm performance across multiple identical sites simultaneously. Identify your best and worst
+              performing sites — and transfer best practice across your fleet.</p>
             <span class="alarmiq-badge green-badge">Unique Capability</span>
           </div>
           <div class="alarmiq-feat">
             <div class="feat-code">ALQ-005</div>
             <h4>PowerPoint-Ready Reports</h4>
-            <p>Automated management reporting with traffic-light dashboards exportable directly to PNG for presentation. Reduces manual reporting effort, typically saving several days per month across alarm engineering workflows.</p>
+            <p>Automated management reporting with traffic-light dashboards exportable directly to PNG for presentation.
+              Reduces manual reporting effort, typically saving several days per month across alarm engineering
+              workflows.</p>
             <span class="alarmiq-badge amber-badge">Reporting</span>
           </div>
           <div class="alarmiq-feat">
             <div class="feat-code">ALQ-006</div>
             <h4>Week-on-Week Trending</h4>
-            <p>Dual-period comparison showing Δ change in alarm frequency — automatically identifies alarms that are getting worse or improving across reporting periods.</p>
+            <p>Dual-period comparison showing Δ change in alarm frequency — automatically identifies alarms that are
+              getting worse or improving across reporting periods.</p>
             <span class="alarmiq-badge green-badge">Analytics</span>
           </div>
         </div>
@@ -1853,7 +2006,9 @@
                 Limited availability. Mining operations only at this stage.
               </p>
             </div>
-            <a class="btn-white" href="mailto:moe@mojocontrolsolutions.com.au?subject=AlarmIQ%20Founding%20Customer%20Expression%20of%20Interest&body=Hi%20Moe%2C%20I'd%20like%20to%20express%20interest%20in%20AlarmIQ%20as%20a%20founding%20customer.%0A%0ASite%2FOperation%3A%20%0AChallenge%3A%20%0ATimeline%3A%20">Express Interest →</a>
+            <a class="btn-white"
+              href="mailto:moe@mojocontrolsolutions.com.au?subject=AlarmIQ%20Founding%20Customer%20Expression%20of%20Interest&body=Hi%20Moe%2C%20I'd%20like%20to%20express%20interest%20in%20AlarmIQ%20as%20a%20founding%20customer.%0A%0ASite%2FOperation%3A%20%0AChallenge%3A%20%0ATimeline%3A%20">Express
+              Interest →</a>
           </div>
           <div class="alarmiq-cta-right">
             <h4>Standards Implemented</h4>
@@ -1886,8 +2041,8 @@
               every engagement, the focus is always on what works in the field — not just on paper.
             </p>
             <p style="margin-top: 0; margin-bottom: 28px;">
-              Based in Melbourne and operating Australia-wide with remote delivery capability, 
-              MOJO works directly with operations teams, planning and scheduling teams, maintenance 
+              Based in Melbourne and operating Australia-wide with remote delivery capability,
+              MOJO works directly with operations teams, planning and scheduling teams, maintenance
               engineers, and EPC contractors who need engineering intelligence — not generic software.
             </p>
             <div class="tag-row">
@@ -1906,19 +2061,25 @@
           <div class="about-right">
             <div class="capability-block">
               <div class="cap-title">Established 2012 — 14 Years in Practice</div>
-              <div class="cap-desc">Founded in May 2012 and operating continuously since — MOJO brings the stability and track record of an established engineering practice, not a start-up.</div>
+              <div class="cap-desc">Founded in May 2012 and operating continuously since — MOJO brings the stability and
+                track record of an established engineering practice, not a start-up.</div>
             </div>
             <div class="capability-block">
               <div class="cap-title">Field-First Engineering</div>
-              <div class="cap-desc">Every solution is shaped by real plant experience across mining, marine, oil &amp; gas, and manufacturing — practical, reliable, and focused on operational outcomes rather than theoretical ideals.</div>
+              <div class="cap-desc">Every solution is shaped by real plant experience across mining, marine, oil &amp;
+                gas, and manufacturing — practical, reliable, and focused on operational outcomes rather than
+                theoretical ideals.</div>
             </div>
             <div class="capability-block">
               <div class="cap-title">Control Systems Depth</div>
-              <div class="cap-desc">Deep knowledge across PLC, SCADA, DCS and HMI environments — from logic review and diagnostics to commissioning, alarm management, and performance improvement.</div>
+              <div class="cap-desc">Deep knowledge across PLC, SCADA, DCS and HMI environments — from logic review and
+                diagnostics to commissioning, alarm management, and performance improvement.</div>
             </div>
             <div class="capability-block">
               <div class="cap-title">AI-Augmented Engineering</div>
-              <div class="cap-desc">Building practical digital tools and AI-augmented workflows — including MOJO AlarmIQ — that bring 37 years of engineering knowledge into accessible, useful formats for modern industrial operations.</div>
+              <div class="cap-desc">Building practical digital tools and AI-augmented workflows — including MOJO AlarmIQ
+                — that bring 37 years of engineering knowledge into accessible, useful formats for modern industrial
+                operations.</div>
             </div>
           </div>
         </div>
@@ -1942,7 +2103,8 @@
             <div class="contact-fields">
               <div class="contact-field">
                 <span class="field-label">Email</span>
-                <span class="field-val"><a href="mailto:moe@mojocontrolsolutions.com.au">moe@mojocontrolsolutions.com.au</a></span>
+                <span class="field-val"><a
+                    href="mailto:moe@mojocontrolsolutions.com.au">moe@mojocontrolsolutions.com.au</a></span>
               </div>
               <div class="contact-field">
                 <span class="field-label">Location</span>
@@ -1962,8 +2124,12 @@
               </div>
             </div>
             <div style="margin-top:20px;">
-              <a class="linkedin-link" href="https://linkedin.com/company/mojo-control-solutions" target="_blank" rel="noopener">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M16 8a6 6 0 016 6v7h-4v-7a2 2 0 00-2-2 2 2 0 00-2 2v7h-4v-7a6 6 0 016-6zM2 9h4v12H2z"/><circle cx="4" cy="4" r="2"/></svg>
+              <a class="linkedin-link" href="https://linkedin.com/company/mojo-control-solutions" target="_blank"
+                rel="noopener">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M16 8a6 6 0 016 6v7h-4v-7a2 2 0 00-2-2 2 2 0 00-2 2v7h-4v-7a6 6 0 016-6zM2 9h4v12H2z" />
+                  <circle cx="4" cy="4" r="2" />
+                </svg>
                 Connect on LinkedIn
               </a>
             </div>
@@ -1971,7 +2137,8 @@
           <div class="contact-right">
             <div>
               <h3>Ready to solve the problem?</h3>
-              <p>Send a brief message below — whether it's an alarm management challenge, a commissioning project, a control system review, or an AlarmIQ enquiry.</p>
+              <p>Send a brief message below — whether it's an alarm management challenge, a commissioning project, a
+                control system review, or an AlarmIQ enquiry.</p>
             </div>
             <!-- Quick enquiry form — opens default mail client pre-filled -->
             <div class="contact-form" id="contactForm">
@@ -1999,12 +2166,14 @@
               </div>
               <div class="form-group">
                 <label for="cf-msg">Brief Description</label>
-                <textarea id="cf-msg" placeholder="Briefly describe your challenge or what you'd like to discuss…"></textarea>
+                <textarea id="cf-msg"
+                  placeholder="Briefly describe your challenge or what you'd like to discuss…"></textarea>
               </div>
               <button class="form-submit" onclick="sendEnquiry()">
                 Send Enquiry →
               </button>
-              <div class="form-note">⚡ Opens your email client pre-filled · Alternatively email moe@mojocontrolsolutions.com.au directly</div>
+              <div class="form-note">⚡ Opens your email client pre-filled · Alternatively email
+                moe@mojocontrolsolutions.com.au directly</div>
             </div>
           </div>
         </div>
@@ -2053,7 +2222,8 @@
           </div>
           <div class="cap-row">
             <span class="cap-key">Contact</span>
-            <span class="cap-val"><a href="mailto:moe@mojocontrolsolutions.com.au">moe@mojocontrolsolutions.com.au</a></span>
+            <span class="cap-val"><a
+                href="mailto:moe@mojocontrolsolutions.com.au">moe@mojocontrolsolutions.com.au</a></span>
           </div>
           <div class="cap-row">
             <span class="cap-key">Website</span>
@@ -2091,7 +2261,8 @@
           </div>
           <div class="cap-row">
             <span class="cap-key">Data Analytics</span>
-            <span class="cap-val">Process historian analytics, SEEQ, alarm history analysis, AI-powered diagnostics</span>
+            <span class="cap-val">Process historian analytics, SEEQ, alarm history analysis, AI-powered
+              diagnostics</span>
           </div>
           <div class="cap-row">
             <span class="cap-key">Commissioning</span>
@@ -2140,7 +2311,8 @@
         · ABN 33 563 327 309 · ALL RIGHTS RESERVED
       </div>
       <div class="footer-right">
-        <a class="linkedin-link" href="https://linkedin.com/company/mojo-control-solutions" target="_blank" rel="noopener" style="color:var(--dim);">LinkedIn</a>
+        <a class="linkedin-link" href="https://linkedin.com/company/mojo-control-solutions" target="_blank"
+          rel="noopener" style="color:var(--dim);">LinkedIn</a>
         <span>MEL · VIC · AUS</span>
         <span>AUTOMATION · SCADA · ALARMIQ · CONTROL SYSTEMS</span>
       </div>
@@ -2185,10 +2357,10 @@
 
     // ── CONTACT FORM → MAILTO ──
     function sendEnquiry() {
-      const name    = document.getElementById('cf-name').value.trim();
+      const name = document.getElementById('cf-name').value.trim();
       const company = document.getElementById('cf-company').value.trim();
-      const topic   = document.getElementById('cf-topic').value;
-      const msg     = document.getElementById('cf-msg').value.trim();
+      const topic = document.getElementById('cf-topic').value;
+      const msg = document.getElementById('cf-msg').value.trim();
 
       if (!name || !msg) {
         alert('Please enter your name and a brief message.');
@@ -2200,7 +2372,7 @@
         'Hi Moe,\n\n' +
         'Name: ' + name + '\n' +
         (company ? 'Company / Site: ' + company + '\n' : '') +
-        (topic   ? 'Enquiry Type: '  + topic   + '\n' : '') +
+        (topic ? 'Enquiry Type: ' + topic + '\n' : '') +
         '\n' + msg + '\n\n' +
         'Regards,\n' + name
       );
@@ -2221,4 +2393,5 @@
   </script>
 
 </body>
+
 </html>
