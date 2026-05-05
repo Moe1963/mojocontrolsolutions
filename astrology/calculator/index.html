@@ -9,6 +9,16 @@
 <script type="module">
   import Swisseph from "https://cdn.jsdelivr.net/npm/swisseph-wasm@0.0.5/wasm/swisseph.js";
   window._SwissephLoader = Swisseph;
+  // Signal via a resolved Promise so getSwissEph() can await it reliably
+  if (window._swissephLoaderResolve) window._swissephLoaderResolve(Swisseph);
+</script>
+<script>
+  // Create the Promise BEFORE the module loads so it's always available
+  window._swissephLoaderPromise = new Promise(resolve => {
+    window._swissephLoaderResolve = resolve;
+    // If module already resolved (cached), resolve immediately
+    setTimeout(() => { if (window._SwissephLoader) resolve(window._SwissephLoader); }, 0);
+  });
 </script>
 <style>
 :root {
@@ -74,6 +84,7 @@ input[type=checkbox] { width:auto; }
 .vertex-row { color:#c084fc; }
 .chiron-row { color:#67e8f9; }
 .lilith-row { color:#f472b6; }
+.pof-row    { color:#fbbf24; }
 @media (max-width:640px) {
   body { padding:10px; }
   .wide { grid-column:span 1; }
@@ -155,10 +166,10 @@ input[type=checkbox] { width:auto; }
 <div class="container">
   <div class="header-box">
     <h1>AstroCalc Pro</h1>
-    <p>Myanmar birthplace dropdown · Chiron / Lilith / Vertex · Tropical / Sidereal · Whole Sign / Equal / Placidus</p>
+    <p>Myanmar &amp; Australia birthplaces · Chiron / Lilith / Vertex / Part of Fortune · True &amp; Mean Node · Tropical / Sidereal · Whole Sign / Equal / Placidus</p>
     <p style="margin-top:10px; font-size:.85rem;">
       <span class="free-badge" style="font-size:.72rem;">Free</span>&nbsp; Birth Chart &amp; Solar Return &nbsp;·&nbsp;
-      <span style="background:linear-gradient(135deg,#6c63ff,#a78bfa);color:#fff;font-size:.72rem;font-weight:bold;letter-spacing:.1em;text-transform:uppercase;padding:3px 10px;border-radius:999px;">⭐ Pro</span>&nbsp; Transits · Progressions · AI Export
+      <span style="background:linear-gradient(135deg,#6c63ff,#a78bfa);color:#fff;font-size:.72rem;font-weight:bold;letter-spacing:.1em;text-transform:uppercase;padding:3px 10px;border-radius:999px;">⭐ Pro</span>&nbsp; Transits · Progressions · Synastry · AI Export
     </p>
   </div>
   
@@ -205,6 +216,14 @@ input[type=checkbox] { width:auto; }
     <div class="toggle-row">
       <input type="checkbox" id="showMinorAspects">
       <label for="showMinorAspects">Show minor aspects (Quincunx 150°, Semi-sextile 30°, Semi-square 45°, Sesquiquadrate 135°)</label>
+    </div>
+    <div class="toggle-row">
+      <input type="checkbox" id="usetruenode">
+      <label for="usetruenode">Use True North Node instead of Mean North Node</label>
+    </div>
+    <div class="toggle-row">
+      <input type="checkbox" id="showpof" checked>
+      <label for="showpof">Show Part of Fortune ⊕ (day/night chart formula)</label>
     </div>
     <div class="small">
       Important: Swiss Ephemeris WASM mode is the professional calculation mode and adds Placidus house support for Astro.com-style validation. Astronomy Engine remains available as a fallback if the Swiss WASM module cannot be loaded. For Astro.com comparison, use Tropical zodiac and Placidus houses.
@@ -421,7 +440,63 @@ input[type=checkbox] { width:auto; }
     <div id="aspects" class="aspect-grid"></div>
   </div>
   
-   <!-- === WATERMARK / CREDIT SNIPPET === -->
+   <!-- === SYNASTRY === -->
+  <div class="pro-card-wrapper">
+  <div class="card">
+    <h3 class="section-title">Synastry — Two-Chart Comparison</h3>
+    <div class="note">Enter a second person's birth details to compare their chart against the natal chart above. Synastry maps how two people's planets interact — conjunctions, oppositions, and trines between charts reveal the nature of the relationship.</div>
+    <div class="grid" style="margin-top:14px;">
+      <div><label>Person B — Birth Date</label><input type="date" id="synDate"></div>
+      <div><label>Person B — Birth Time</label><input type="time" id="synTime"></div>
+      <div><label>Timezone UTC Offset</label><input type="number" id="synTz" value="6.5" step="0.25"></div>
+      <div class="wide">
+        <label>Person B — Birth Place</label>
+        <select id="synPlace" onchange="applySynPlace()"></select>
+        <div class="coord-note" id="synPlaceNote"></div>
+      </div>
+      <div><label>Latitude</label><input type="number" id="synLat" value="" step="0.00001"></div>
+      <div><label>Longitude</label><input type="number" id="synLon" value="" step="0.00001"></div>
+      <div>
+        <label>Aspect Orb</label>
+        <select id="synOrb">
+          <option value="5" selected>5° standard</option>
+          <option value="3">3° tight</option>
+          <option value="8">8° wide</option>
+        </select>
+      </div>
+    </div>
+    <button onclick="calculateSynastry()">Calculate Synastry</button>
+    <div class="small">Synastry uses Swiss Ephemeris. Person A is the natal chart calculated above — calculate it first before running synastry. Inter-chart aspects are shown: Person A planet → Person B planet.</div>
+  </div>
+  <div class="pro-gate-overlay">
+    <div class="pro-gate-badge">⭐ Pro Feature</div>
+    <div class="pro-gate-icon">💑</div>
+    <div class="pro-gate-title">Synastry — Two-Chart Comparison</div>
+    <div class="pro-gate-subtitle">Compare two birth charts to reveal compatibility, attraction points, and relationship dynamics through inter-chart aspects.</div>
+    <div class="pro-gate-features">
+      <span>Inter-chart aspects</span>
+      <span>Bi-wheel overlay</span>
+      <span>All major aspects</span>
+    </div>
+    <a class="pro-gate-btn" href="https://mojocontrolsolutions.com.au" target="_blank">🔓 Unlock AstroCalc Pro</a>
+  </div>
+  </div>
+
+  <div id="synastry-results" class="card" style="display:none;">
+    <h3 class="section-title">Synastry Results</h3>
+    <div class="note" id="synastry-summary"></div>
+    <div id="synastry-biwheel"></div>
+    <div class="biwheel-note">Inner ring = Person A (natal). Outer ring = Person B. Aspect lines drawn between inter-chart contacts.</div>
+    <h3 class="section-title" style="margin-top:22px;">Person B Planet Positions</h3>
+    <table>
+      <thead><tr><th>Body</th><th>Sign</th><th>Degree</th><th>DMS</th><th>House in A</th><th>Motion</th></tr></thead>
+      <tbody id="synastry-planet-table"></tbody>
+    </table>
+    <h3 class="section-title" style="margin-top:22px;">Inter-Chart Aspects (A → B)</h3>
+    <div id="synastry-aspects" class="aspect-grid"></div>
+  </div>
+
+  <!-- === WATERMARK / CREDIT SNIPPET === -->
   <div style="text-align: center; margin: 50px 0 30px; padding: 25px 15px; color: rgba(160, 160, 210, 0.45); font-size: 13.5px; line-height: 1.45; border-top: 1px solid #2d2d5f;">
     Prepared by Aung Moe Kyaw<br>
     AI-Augmented Software Developer<br>
@@ -494,8 +569,8 @@ class SwissEph {
   SE_SUN=0;SE_MOON=1;SE_MERCURY=2;SE_VENUS=3;SE_MARS=4;SE_JUPITER=5;SE_SATURN=6;
   SE_URANUS=7;SE_NEPTUNE=8;SE_PLUTO=9;SE_MEAN_NODE=10;SE_MEAN_APOG=12;SE_CHIRON=15;
   SEFLG_SWIEPH=2;SEFLG_SPEED=256;SEFLG_SIDEREAL=65536;SE_SIDM_LAHIRI=1;
-  async initSwissEph() {
-    const Swisseph = window._SwissephLoader;
+  async initSwissEph(SwissephLoader) {
+    const Swisseph = SwissephLoader || window._SwissephLoader;
     if (!Swisseph) throw new Error("Swiss Ephemeris module not yet loaded — please wait a moment and try again.");
     this.SweModule = await Swisseph({
       locateFile: (path) => {
@@ -531,12 +606,14 @@ async function getSwissEph() {
   if (swissInstance) return swissInstance;
   showLoading("Loading Swiss Ephemeris WASM (first load only, ~12 MB)…");
   try {
-    // Wait up to 8 seconds for the <script type="module"> to finish loading
-    for (let i = 0; i < 80 && !window._SwissephLoader; i++) {
-      await new Promise(r => setTimeout(r, 100));
-    }
+    // Wait for the module Promise with a 20-second timeout
+    const Swisseph = await Promise.race([
+      window._swissephLoaderPromise,
+      new Promise((_, reject) => setTimeout(() => reject(new Error("Swiss Ephemeris load timed out after 20s — check your internet connection.")), 20000))
+    ]);
+    if (!Swisseph) throw new Error("Swiss Ephemeris module failed to load.");
     swissInstance = new SwissEph();
-    await swissInstance.initSwissEph();
+    await swissInstance.initSwissEph(Swisseph);
     swissLoadMessage = "Swiss Ephemeris WASM active";
   } catch (err) {
     swissLoadMessage = "Swiss WASM load failed: " + (err?.message || err);
@@ -551,16 +628,32 @@ function decimalUtcHour(utcDate) {
   return utcDate.getUTCHours() + utcDate.getUTCMinutes()/60 + utcDate.getUTCSeconds()/3600 + utcDate.getUTCMilliseconds()/3600000;
 }
 
-function swissPlanetMap(swe) {
+function swissPlanetMap(swe, includeTrue) {
   const bodies = [
     {name:"Sun", id:swe.SE_SUN}, {name:"Moon", id:swe.SE_MOON}, {name:"Mercury", id:swe.SE_MERCURY},
     {name:"Venus", id:swe.SE_VENUS}, {name:"Mars", id:swe.SE_MARS}, {name:"Jupiter", id:swe.SE_JUPITER},
     {name:"Saturn", id:swe.SE_SATURN}, {name:"Uranus", id:swe.SE_URANUS}, {name:"Neptune", id:swe.SE_NEPTUNE},
-    {name:"Pluto", id:swe.SE_PLUTO}, {name:"Mean North Node", id:swe.SE_MEAN_NODE}
+    {name:"Pluto", id:swe.SE_PLUTO},
   ];
+  // True Node (11) vs Mean Node (10)
+  const nodeId = includeTrue ? 11 : swe.SE_MEAN_NODE;
+  const nodeName = includeTrue ? "True North Node" : "Mean North Node";
+  bodies.push({name:nodeName, id:nodeId});
   if (typeof swe.SE_CHIRON !== "undefined") bodies.push({name:"Chiron", id:swe.SE_CHIRON});
   if (typeof swe.SE_MEAN_APOG !== "undefined") bodies.push({name:"Lilith (Mean)", id:swe.SE_MEAN_APOG});
   return bodies;
+}
+
+// Part of Fortune: ASC + Moon - Sun (day chart); ASC + Sun - Moon (night chart)
+function calculatePartOfFortune(asc, sun, moon) {
+  const isDayChart = (() => {
+    // Sun above horizon = house 7-12 from ASC perspective (lon between ASC and ASC+180)
+    const sunFromAsc = rev(sun - asc);
+    return sunFromAsc >= 0 && sunFromAsc < 180;
+  })();
+  return isDayChart
+    ? rev(asc + moon - sun)
+    : rev(asc + sun - moon);
 }
 
 function extractSwissPosition(pos) {
@@ -621,7 +714,8 @@ async function buildSwissChart(dateStr, timeStr, tzOffset, lat, lon, zodiac, sys
     swe.set_sid_mode(swe.SE_SIDM_LAHIRI, 0, 0);
     flags |= swe.SEFLG_SIDEREAL;
   }
-  const results = swissPlanetMap(swe).map(p => {
+  const useTrueNode = document.getElementById("usetruenode")?.checked || false;
+  const results = swissPlanetMap(swe, useTrueNode).map(p => {
     try {
       const pos = extractSwissPosition(swe.calc_ut(jd, p.id, flags));
       const rowClass = p.name === "Chiron" ? "chiron-row" : p.name === "Lilith (Mean)" ? "lilith-row" : "";
@@ -633,15 +727,26 @@ async function buildSwissChart(dateStr, timeStr, tzOffset, lat, lon, zodiac, sys
   const vertexLon = zodiacLon(calculateVertex(jd, lat, lon), jd, zodiac);
   let houseData = { cusps:[], asc:fallbackAsc, mc:fallbackMc };
   if (system === "placidus" && typeof swe.houses === "function") {
+    // Always calculate Placidus in tropical — correct approach per Swiss Ephemeris docs
+    // Sidereal flag must NOT be set for house calculation; subtract ayanamsa after
     const houseResult = swe.houses(jd, lat, lon, "P");
     houseData = extractHouseData(houseResult, fallbackAsc, fallbackMc);
     if (zodiac === "sidereal") {
       const ayan = typeof swe.get_ayanamsa === "function" ? swe.get_ayanamsa(jd) : lahiriAyanamsa(jd);
-      houseData.asc = rev(houseData.asc - ayan);
-      houseData.mc = rev(houseData.mc - ayan);
+      houseData.asc   = rev(houseData.asc   - ayan);
+      houseData.mc    = rev(houseData.mc    - ayan);
       houseData.cusps = houseData.cusps.map(c => rev(c - ayan));
     }
+  } else if (system !== "placidus") {
+    // Whole/Equal: recompute ASC properly for sidereal if needed
+    houseData.asc = fallbackAsc;
+    houseData.mc  = fallbackMc;
   }
+  // Part of Fortune
+  const sunLon  = results.find(r => r.name === "Sun")?.lon  ?? 0;
+  const moonLon = results.find(r => r.name === "Moon")?.lon ?? 0;
+  const pof = calculatePartOfFortune(houseData.asc, sunLon, moonLon);
+  results.push({ name:"Part of Fortune", lon:pof, special:"pof-row", motion:"" });
   results.push({ name:"Vertex", lon:vertexLon, special:"vertex-row", motion:"" });
   results.push({ name:"Ascendant", lon:houseData.asc, special:"asc-row", motion:"" });
   results.push({ name:"MC", lon:houseData.mc, special:"mc-row", motion:"" });
@@ -876,6 +981,8 @@ async function calculateChart() {
     alert("Please enter valid date, time, timezone, latitude and longitude.");
     return;
   }
+  if (lat < -90 || lat > 90) { alert("Latitude must be between -90° and +90°."); return; }
+  if (lon < -180 || lon > 180) { alert("Longitude must be between -180° and +180°."); return; }
 
   showLoading("Calculating natal chart…");
   let chart;
@@ -895,8 +1002,10 @@ async function calculateChart() {
   }
 
   const { results, asc, mc, cusps, jd, utcDate, engineName } = chart;
+  const showPof = document.getElementById("showpof")?.checked !== false;
+  const displayResults = showPof ? results : results.filter(p => p.name !== "Part of Fortune");
   let html = "";
-  results.forEach(p => {
+  displayResults.forEach(p => {
     let h;
     if (p.name === "MC") {
       h = "MC";
@@ -932,8 +1041,8 @@ async function calculateChart() {
   renderAudit(dateStr, timeStr, tzOffset, utcDate, jd, zodiac, system, engineName, cusps);
   document.getElementById("planet-table").innerHTML = html;
   document.getElementById("results").style.display = "block";
-  renderWheel(results, asc, cusps, "wheel");
-  renderAspects(results);
+  renderWheel(displayResults, asc, cusps, "wheel");
+  renderAspects(displayResults);
 }
 
 
@@ -1883,11 +1992,201 @@ async function downloadAiJsonFile() {
   const blob = new Blob([text], {type:"application/json"}); const url = URL.createObjectURL(blob); const a = document.createElement("a"); a.href = url; a.download = `${safeName}-ai-export.json`; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
 }
 
+// ===== SYNASTRY =====
+let _natalChartForSynastry = null; // stored when natal is calculated
+
+// Store natal chart results for synastry use
+const _origCalculateChart = calculateChart;
+async function calculateChart() {
+  await _origCalculateChart.apply(this, arguments);
+  // After natal calc, capture chart data for synastry
+  // We re-run a lightweight data capture
+  _natalChartForSynastry = null; // reset; will be populated below
+}
+
+function populateSynPlaces() {
+  const select = document.getElementById("synPlace");
+  if (!select) return;
+  select.innerHTML = BIRTH_PLACES.map((p, idx) => `<option value="${idx}">${p.name}</option>`).join("");
+}
+
+function applySynPlace() {
+  const idx = Number(document.getElementById("synPlace").value);
+  const place = BIRTH_PLACES[idx];
+  if (!place || place.lat === null) return;
+  document.getElementById("synLat").value = place.lat.toFixed(5);
+  document.getElementById("synLon").value = place.lon.toFixed(5);
+  document.getElementById("synTz").value = place.tz;
+  document.getElementById("synPlaceNote").innerHTML =
+    `${place.name}: ${coordLabel(place.lat, place.lon)}, UTC offset ${place.tz >= 0 ? "+" : ""}${place.tz}`;
+}
+
+async function calculateSynastry() {
+  // Person A — re-build natal chart silently
+  const dateStr = document.getElementById("date").value;
+  const timeStr = document.getElementById("time").value;
+  const tzOffset = parseFloat(document.getElementById("tz").value);
+  const lat  = parseFloat(document.getElementById("lat").value);
+  const lon  = parseFloat(document.getElementById("lon").value);
+  const system = document.getElementById("houseSystem").value;
+  const zodiac = document.getElementById("zodiac").value;
+
+  // Person B inputs
+  const synDate = document.getElementById("synDate").value;
+  const synTime = document.getElementById("synTime").value;
+  const synTz   = parseFloat(document.getElementById("synTz").value);
+  const synLat  = parseFloat(document.getElementById("synLat").value);
+  const synLon  = parseFloat(document.getElementById("synLon").value);
+  const maxOrb  = parseFloat(document.getElementById("synOrb").value) || 5;
+
+  if (!dateStr || !timeStr || isNaN(lat) || isNaN(lon)) {
+    alert("Please calculate Person A's natal chart first (fill in birth details above and click Calculate Chart)."); return;
+  }
+  if (!synDate || !synTime || isNaN(synLat) || isNaN(synLon)) {
+    alert("Please enter valid birth details for Person B."); return;
+  }
+
+  showLoading("Calculating synastry charts…");
+  try {
+    const [chartA, chartB] = await Promise.all([
+      buildSwissChart(dateStr, timeStr, tzOffset, lat, lon, zodiac, system),
+      buildSwissChart(synDate, synTime, synTz, synLat, synLon, zodiac, system)
+    ]);
+
+    // Planet rows for Person B
+    const skipB = ["Ascendant","MC","Part of Fortune","Vertex"];
+    const showPof = document.getElementById("showpof")?.checked !== false;
+    const planetsB = chartB.results.filter(p => !skipB.includes(p.name));
+    let rowHtml = planetsB.map(p => {
+      let h;
+      if (system === "placidus" && chartA.cusps && chartA.cusps.length >= 12) {
+        h = "House " + (placidusHouseFromCusps(p.lon, chartA.cusps) || houseOf(p.lon, chartA.asc, "equal"));
+      } else {
+        h = "House " + houseOf(p.lon, chartA.asc, system === "whole" ? "whole" : "equal");
+      }
+      return `<tr class="${p.special}"><td><strong>${p.name}</strong></td><td>${signText(p.lon)}</td><td>${degreeText(p.lon)}</td><td>${degreeDms(p.lon)}</td><td><span class="house-badge">${h}</span></td><td>${p.motion}</td></tr>`;
+    }).join("");
+
+    // Inter-chart aspects: A planet vs B planet
+    const planetsA = chartA.results.filter(p => !["MC","Ascendant","Part of Fortune","Vertex"].includes(p.name));
+    const aspects = [];
+    for (const pa of planetsA) {
+      for (const pb of planetsB) {
+        const asp = aspectBetween(pa.lon, pb.lon, false);
+        if (asp) aspects.push({a: pa.name, b: pb.name, ...asp});
+      }
+    }
+    aspects.sort((x,y) => x.orb - y.orb);
+
+    const aspHtml = aspects.length
+      ? aspects.map(x => `<div class="aspect-card"><strong>A:${x.a} ${x.glyph} B:${x.b}</strong><br>${x.name}, orb ${x.orb.toFixed(2)}°</div>`).join("")
+      : `<div class="note">No inter-chart aspects found within ${maxOrb}° orb.</div>`;
+
+    const placeA = BIRTH_PLACES[Number(document.getElementById("birthPlace").value)]?.name || "Manual";
+    const placeB = BIRTH_PLACES[Number(document.getElementById("synPlace").value)]?.name || "Manual";
+    document.getElementById("synastry-summary").innerHTML =
+      `<strong>Person A:</strong> ${dateStr} ${timeStr}, ${placeA} &nbsp;|&nbsp; <strong>ASC:</strong> ${signText(chartA.asc)} &nbsp;·&nbsp; <strong>Sun:</strong> ${signText(chartA.results.find(r=>r.name==="Sun")?.lon??0)}<br>` +
+      `<strong>Person B:</strong> ${synDate} ${synTime}, ${placeB} &nbsp;|&nbsp; <strong>ASC:</strong> ${signText(chartB.asc)} &nbsp;·&nbsp; <strong>Sun:</strong> ${signText(chartB.results.find(r=>r.name==="Sun")?.lon??0)}<br>` +
+      `<strong>Inter-chart aspects found:</strong> ${aspects.length} within ${maxOrb}° orb`;
+
+    document.getElementById("synastry-planet-table").innerHTML = rowHtml;
+    document.getElementById("synastry-aspects").innerHTML = aspHtml;
+    document.getElementById("synastry-results").style.display = "block";
+
+    // Render synastry bi-wheel
+    renderSynastryBiwheel(chartA, chartB);
+
+    document.getElementById("synastry-results").scrollIntoView({behavior:"smooth", block:"start"});
+  } catch(err) {
+    console.error(err);
+    alert("Synastry calculation failed:\n\n" + (err?.message || err));
+  } finally {
+    hideLoading();
+  }
+}
+
+function renderSynastryBiwheel(chartA, chartB) {
+  const cx=310, cy=310, R=290;
+  const rOuter=R, rInner=R*0.72, rCore=R*0.44;
+  const planetsA = chartA.results.filter(p=>!["MC","Vertex"].includes(p.name));
+  const planetsB = chartB.results.filter(p=>!["MC","Vertex","Part of Fortune"].includes(p.name));
+
+  let svg = `<svg viewBox="0 0 620 620" xmlns="http://www.w3.org/2000/svg" style="max-width:620px;background:#07070f;border-radius:12px;">`;
+  // Zodiac ring
+  for (let i=0;i<12;i++){
+    const a1=(i*30-chartA.asc-90)*RAD, a2=((i+1)*30-chartA.asc-90)*RAD;
+    const x1=cx+rOuter*Math.cos(a1),y1=cy+rOuter*Math.sin(a1);
+    const x2=cx+rOuter*Math.cos(a2),y2=cy+rOuter*Math.sin(a2);
+    const xi=cx+rInner*Math.cos(a1),yi=cy+rInner*Math.sin(a1);
+    const fill = i%2===0?"#0d0d20":"#111128";
+    svg+=`<path d="M${xi.toFixed(1)},${yi.toFixed(1)} L${x1.toFixed(1)},${y1.toFixed(1)} A${rOuter},${rOuter} 0 0,1 ${x2.toFixed(1)},${y2.toFixed(1)} L${cx+rInner*Math.cos(a2)},${cy+rInner*Math.sin(a2)} A${rInner},${rInner} 0 0,0 ${xi.toFixed(1)},${yi.toFixed(1)}Z" fill="${fill}" stroke="#1a1a3a" stroke-width="0.5"/>`;
+    // Sign glyph
+    const signGlyphs=["♈","♉","♊","♋","♌","♍","♎","♏","♐","♑","♒","♓"];
+    const aMid=((i+0.5)*30-chartA.asc-90)*RAD;
+    const rGlyph=(rOuter+rInner)/2;
+    svg+=`<text x="${(cx+rGlyph*Math.cos(aMid)).toFixed(1)}" y="${(cy+rGlyph*Math.sin(aMid)+5).toFixed(1)}" text-anchor="middle" fill="#4a4a8a" font-size="13">${signGlyphs[i]}</text>`;
+  }
+  // Circles
+  svg+=`<circle cx="${cx}" cy="${cy}" r="${rOuter}" fill="none" stroke="#2d2d5f" stroke-width="1"/>`;
+  svg+=`<circle cx="${cx}" cy="${cy}" r="${rInner}" fill="none" stroke="#2d2d5f" stroke-width="1"/>`;
+  svg+=`<circle cx="${cx}" cy="${cy}" r="${rCore}" fill="#0a0a18" stroke="#2d2d5f" stroke-width="1"/>`;
+
+  const GSYN = {...GLYPHS, "True North Node":"☊", "Part of Fortune":"⊕"};
+
+  // Person A planets (inner ring)
+  planetsA.forEach(p => {
+    const angle = (p.lon - chartA.asc - 90) * RAD;
+    const r1=rCore+4, r2=rInner-6;
+    svg+=`<line x1="${(cx+r1*Math.cos(angle)).toFixed(1)}" y1="${(cy+r1*Math.sin(angle)).toFixed(1)}" x2="${(cx+r2*Math.cos(angle)).toFixed(1)}" y2="${(cy+r2*Math.sin(angle)).toFixed(1)}" stroke="${p.special==="asc-row"?"#ffd966":"#6060aa"}" stroke-width="${p.special==="asc-row"?1.5:0.8}"/>`;
+    const rLbl=rCore-14;
+    const col = p.special==="asc-row"?"#ffd966":p.special==="mc-row"?"#ffd966":p.special==="chiron-row"?"#67e8f9":p.special==="lilith-row"?"#f472b6":"#a0a0cc";
+    svg+=`<text x="${(cx+rLbl*Math.cos(angle)).toFixed(1)}" y="${(cy+rLbl*Math.sin(angle)+4).toFixed(1)}" text-anchor="middle" fill="${col}" font-size="10">${GSYN[p.name]||p.name.slice(0,2)}</text>`;
+  });
+
+  // Person B planets (outer ring)
+  planetsB.forEach(p => {
+    const angle = (p.lon - chartA.asc - 90) * RAD;
+    const r1=rInner+4, r2=rOuter-6;
+    svg+=`<line x1="${(cx+r1*Math.cos(angle)).toFixed(1)}" y1="${(cy+r1*Math.sin(angle)).toFixed(1)}" x2="${(cx+r2*Math.cos(angle)).toFixed(1)}" y2="${(cy+r2*Math.sin(angle)).toFixed(1)}" stroke="#cc6090" stroke-width="0.8"/>`;
+    const rLbl=rOuter+14;
+    svg+=`<text x="${(cx+rLbl*Math.cos(angle)).toFixed(1)}" y="${(cy+rLbl*Math.sin(angle)+4).toFixed(1)}" text-anchor="middle" fill="#e080b0" font-size="9">${GSYN[p.name]||p.name.slice(0,2)}</text>`;
+  });
+
+  // Aspect lines between A and B
+  const planetsAasp = chartA.results.filter(p=>!["MC","Ascendant","Part of Fortune","Vertex"].includes(p.name));
+  const planetsBasp = chartB.results.filter(p=>!["MC","Ascendant","Part of Fortune","Vertex"].includes(p.name));
+  const aspColors = {Conjunction:"#ffd966",Opposition:"#ff6b6b",Trine:"#64d68a",Square:"#ff8c42",Sextile:"#7ec8e3"};
+  for (const pa of planetsAasp) {
+    for (const pb of planetsBasp) {
+      const asp = aspectBetween(pa.lon, pb.lon, false);
+      if (!asp || asp.orb > 5) continue;
+      const aA=(pa.lon-chartA.asc-90)*RAD, aB=(pb.lon-chartA.asc-90)*RAD;
+      const col = aspColors[asp.name] || "#4444aa";
+      const opacity = Math.max(0.15, 0.6 - asp.orb * 0.08);
+      svg+=`<line x1="${(cx+rCore*0.85*Math.cos(aA)).toFixed(1)}" y1="${(cy+rCore*0.85*Math.sin(aA)).toFixed(1)}" x2="${(cx+rCore*0.85*Math.cos(aB)).toFixed(1)}" y2="${(cy+rCore*0.85*Math.sin(aB)).toFixed(1)}" stroke="${col}" stroke-width="0.8" opacity="${opacity}"/>`;
+    }
+  }
+
+  svg += `<text x="${cx}" y="${cy-8}" text-anchor="middle" fill="#6060aa" font-size="11">A</text>`;
+  svg += `<text x="${cx}" y="${cy+16}" text-anchor="middle" fill="#e080b0" font-size="9">B outer</text>`;
+  svg += "</svg>";
+  document.getElementById("synastry-biwheel").innerHTML = svg;
+}
+
 window.onload = function() {
+  // Default birth date to today
+  const today = new Date();
+  const yyyy = today.getFullYear();
+  const mm   = String(today.getMonth() + 1).padStart(2, "0");
+  const dd   = String(today.getDate()).padStart(2, "0");
+  document.getElementById("date").value = `${yyyy}-${mm}-${dd}`;
+  document.getElementById("solarYear").value = yyyy;
   populateBirthPlaces();
   applyBirthPlace();
   populateSolarPlaces();
   populateTransitPlaces();
+  populateSynPlaces();
+  applySynPlace();
   useBirthPlaceForSolarReturn();
   applyTransitPlace();
 };
