@@ -1,0 +1,1896 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AstroCalc Pro - Swiss Ephemeris Integrated</title>
+<script src="https://cdn.jsdelivr.net/npm/astronomy-engine/astronomy.browser.min.js"></script>
+<!-- Swiss Ephemeris WASM: loaded via module script so it works from both file:// and http:// -->
+<script type="module">
+  import Swisseph from "https://cdn.jsdelivr.net/npm/swisseph-wasm@0.0.5/wasm/swisseph.js";
+  window._SwissephLoader = Swisseph;
+</script>
+<style>
+:root {
+  --bg:#0a0a15; --card:#12122a; --line:#2d2d5f; --text:#e0e0ff; --muted:#9a9acc;
+  --accent:#9a8cff; --gold:#ffd966; --badge:#30306a; --warn:#ffb86c; --ok:#64d68a;
+}
+* { box-sizing:border-box; }
+body { font-family: Arial, sans-serif; background:var(--bg); color:var(--text); margin:0; padding:18px; }
+.container { max-width:1120px; margin:auto; }
+.card { background:var(--card); border:1px solid var(--line); border-radius:14px; padding:20px; margin-top:18px; box-shadow:0 10px 30px rgba(0,0,0,.35); }
+.header-box { text-align:center; margin-bottom:22px; }
+.header-box h1 { color:var(--accent); margin:0; }
+.header-box p { color:var(--muted); margin:8px 0 0; }
+.grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(170px,1fr)); gap:14px; align-items:end; }
+.wide { grid-column:span 2; }
+label { display:block; font-size:.72rem; color:#aaa; margin-bottom:7px; text-transform:uppercase; letter-spacing:.04em; }
+input, select { width:100%; padding:12px; background:#050510; border:1px solid #333; border-radius:7px; color:white; font-size:1rem; }
+button { width:100%; margin-top:18px; padding:15px; background:#6366f1; border:none; border-radius:9px; color:white; font-weight:bold; font-size:1rem; cursor:pointer; }
+button.secondary { background:#30306a; margin-top:0; }
+button:disabled { opacity:0.5; cursor:not-allowed; }
+table { width:100%; border-collapse:collapse; margin-top:16px; }
+th { text-align:left; padding:10px; color:var(--accent); border-bottom:2px solid var(--line); }
+td { padding:10px; border-bottom:1px solid #1a1a3a; vertical-align:middle; }
+.house-badge { background:var(--badge); padding:4px 8px; border-radius:5px; display:inline-block; min-width:70px; text-align:center; }
+.asc-row, .mc-row { color:var(--gold); }
+.note { color:#b8b8e8; font-size:.92rem; line-height:1.5; }
+.small { color:var(--muted); font-size:.85rem; margin-top:10px; line-height:1.45; }
+.coord-note { color:var(--gold); font-size:.82rem; margin-top:7px; line-height:1.35; }
+.section-title { color:var(--gold); margin:0 0 8px; font-size:1.08rem; }
+svg { width:100%; height:auto; max-width:620px; display:block; margin:10px auto 0; }
+.aspect-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(230px,1fr)); gap:10px; margin-top:12px; }
+.aspect-card { background:#0d0d22; border:1px solid #242457; border-radius:10px; padding:10px; }
+.aspect-card strong { color:var(--gold); }
+.aspect-card.minor-asp { border-color:#1a1a35; opacity:0.82; }
+.quick-row { display:flex; gap:10px; flex-wrap:wrap; align-items:center; margin-top:12px; }
+.quick-row button { width:auto; margin-top:0; padding:10px 14px; }
+.biwheel-note { color:var(--muted); font-size:.88rem; text-align:center; margin-top:8px; }
+textarea.export-box { width:100%; min-height:260px; padding:12px; background:#050510; border:1px solid #333; border-radius:9px; color:#e0e0ff; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size:.86rem; line-height:1.45; resize:vertical; }
+.status-pill { display:inline-block; padding:4px 8px; border-radius:999px; background:#0d0d22; border:1px solid #242457; color:var(--muted); font-size:.82rem; }
+.audit { display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:10px; margin-top:12px; }
+.audit div { background:#0d0d22; border:1px solid #242457; border-radius:10px; padding:10px; }
+.ref-table .ok { color:var(--ok); font-weight:bold; }
+.ref-table .warn { color:var(--warn); font-weight:bold; }
+.warn { color:var(--warn); }
+.ok { color:var(--ok); }
+/* Loading overlay */
+#loading-overlay { display:none; position:fixed; inset:0; background:rgba(5,5,16,.82); z-index:9999; align-items:center; justify-content:center; flex-direction:column; gap:16px; }
+#loading-overlay.active { display:flex; }
+.spinner { width:44px; height:44px; border:3px solid #2d2d5f; border-top-color:var(--accent); border-radius:50%; animation:spin 0.8s linear infinite; }
+@keyframes spin { to { transform:rotate(360deg); } }
+#loading-msg { color:var(--accent); font-size:.95rem; }
+/* Transit timezone mismatch warning */
+.tz-warning { background:#2a1a0a; border:1px solid var(--warn); border-radius:9px; padding:10px 14px; margin-top:10px; color:var(--warn); font-size:.88rem; display:none; }
+.tz-warning.visible { display:block; }
+/* Minor aspects toggle */
+.toggle-row { display:flex; align-items:center; gap:10px; margin-top:10px; }
+.toggle-row label { font-size:.82rem; color:var(--muted); text-transform:none; letter-spacing:0; margin:0; }
+input[type=checkbox] { width:auto; }
+/* Profile notes / tags */
+.profile-notes { width:100%; margin-top:8px; padding:8px; background:#050510; border:1px solid #333; border-radius:7px; color:white; font-size:.9rem; resize:vertical; min-height:54px; }
+.profile-tag { display:inline-block; background:#1e1e45; border:1px solid #3a3a7a; border-radius:999px; padding:3px 10px; font-size:.78rem; color:var(--accent); margin:3px 3px 0 0; }
+/* Vertex / minor body badge */
+.vertex-row { color:#c084fc; }
+.chiron-row { color:#67e8f9; }
+.lilith-row { color:#f472b6; }
+@media (max-width:640px) {
+  body { padding:10px; }
+  .wide { grid-column:span 1; }
+  .card { padding:14px; }
+  th, td { padding:8px 6px; font-size:.92rem; }
+  .house-badge { min-width:58px; }
+}
+
+/* ===== PRO GATE STYLES ===== */
+.pro-card-wrapper { position:relative; }
+.pro-gate-overlay {
+  position:absolute; inset:0; z-index:10;
+  background: rgba(10,10,21,0.82);
+  border-radius:14px;
+  display:flex; flex-direction:column;
+  align-items:center; justify-content:center;
+  gap:14px;
+  backdrop-filter:blur(3px);
+  border:1px solid rgba(154,140,255,0.25);
+}
+.pro-gate-badge {
+  background: linear-gradient(135deg, #6c63ff 0%, #a78bfa 100%);
+  color:#fff; font-size:.75rem; font-weight:bold;
+  letter-spacing:.12em; text-transform:uppercase;
+  padding:4px 12px; border-radius:999px;
+  box-shadow:0 2px 12px rgba(108,99,255,0.4);
+}
+.pro-gate-icon { font-size:2.2rem; line-height:1; }
+.pro-gate-title {
+  color:#e0e0ff; font-size:1.1rem; font-weight:bold;
+  margin:0; text-align:center;
+}
+.pro-gate-subtitle {
+  color:#9a9acc; font-size:.88rem;
+  margin:0; text-align:center; max-width:340px; line-height:1.5;
+}
+.pro-gate-btn {
+  display:inline-block;
+  background: linear-gradient(135deg, #6c63ff, #a78bfa);
+  color:#fff; font-weight:bold; font-size:.95rem;
+  padding:12px 28px; border-radius:9px; border:none;
+  cursor:pointer; text-decoration:none;
+  box-shadow:0 4px 18px rgba(108,99,255,0.35);
+  transition:transform .15s, box-shadow .15s;
+  margin-top:4px;
+}
+.pro-gate-btn:hover { transform:translateY(-2px); box-shadow:0 6px 24px rgba(108,99,255,0.5); }
+.pro-gate-features {
+  display:flex; gap:14px; flex-wrap:wrap; justify-content:center;
+  margin-top:2px;
+}
+.pro-gate-features span {
+  background:#1a1a3a; border:1px solid #2d2d5f;
+  color:#9a9acc; font-size:.78rem; padding:4px 10px; border-radius:999px;
+}
+.free-badge {
+  display:inline-block;
+  background: linear-gradient(135deg, #22c55e, #16a34a);
+  color:#fff; font-size:.72rem; font-weight:bold;
+  letter-spacing:.1em; text-transform:uppercase;
+  padding:3px 10px; border-radius:999px;
+  box-shadow:0 2px 8px rgba(34,197,94,0.3);
+  margin-left:10px; vertical-align:middle;
+}
+.free-tier-note {
+  background:#0d1f0d; border:1px solid #22c55e44;
+  border-radius:9px; padding:10px 14px;
+  color:#86efac; font-size:.85rem; margin-top:12px;
+  line-height:1.5;
+}
+</style>
+</head>
+<body>
+<div id="loading-overlay">
+  <div class="spinner"></div>
+  <div id="loading-msg">Loading Swiss Ephemeris WASM…</div>
+</div>
+
+<div class="container">
+  <div class="header-box">
+    <h1>AstroCalc Pro</h1>
+    <p>Myanmar birthplace dropdown · Chiron / Lilith / Vertex · Tropical / Sidereal · Whole Sign / Equal / Placidus</p>
+    <p style="margin-top:10px; font-size:.85rem;">
+      <span class="free-badge" style="font-size:.72rem;">Free</span>&nbsp; Birth Chart &amp; Solar Return &nbsp;·&nbsp;
+      <span style="background:linear-gradient(135deg,#6c63ff,#a78bfa);color:#fff;font-size:.72rem;font-weight:bold;letter-spacing:.1em;text-transform:uppercase;padding:3px 10px;border-radius:999px;">⭐ Pro</span>&nbsp; Transits · Progressions · AI Export
+    </p>
+  </div>
+  
+  <div class="card">
+    <div class="grid">
+      <div><label>Birth Date</label><input type="date" id="date" value=""></div>
+      <div><label>Birth Time Local</label><input type="time" id="time" value=""></div>
+      <div><label>Timezone UTC Offset</label><input type="number" id="tz" value="0" step="0.25"></div>
+      <div class="wide">
+        <label>Birth Place</label>
+        <select id="birthPlace" onchange="applyBirthPlace()"></select>
+        <div class="coord-note" id="placeNote"></div>
+      </div>
+      <div><label>Latitude</label><input type="number" id="lat" value="" step="0.00001"></div>
+      <div><label>Longitude</label><input type="number" id="lon" value="" step="0.00001"></div>
+      <div>
+        <label>House System</label>
+        <select id="houseSystem">
+          <option value="placidus" selected>Placidus - Astro.com default</option>
+          <option value="whole">Whole Sign</option>
+          <option value="equal">Equal House</option>
+        </select>
+      </div>
+      <div>
+        <label>Zodiac</label>
+        <select id="zodiac">
+          <option value="tropical" selected>Tropical - Astro.com default</option>
+          <option value="sidereal">Sidereal Lahiri</option>
+        </select>
+      </div>
+      <div>
+        <label>Calculation Engine</label>
+        <select id="calcEngine">
+          <option value="swiss" selected>Swiss Ephemeris WASM</option>
+          <option value="astronomy">Astronomy Engine fallback</option>
+        </select>
+      </div>
+      <div>
+        <button class="secondary" onclick="setAstroComMode()">Astro.com Check Mode</button>
+      </div>
+    </div>
+    <button onclick="calculateChart()">Calculate Chart</button>
+    <div class="free-tier-note">✅ <strong>Free</strong> — Birth chart calculation is always free. Includes all planet positions, house cusps, aspects, and natal wheel.</div>
+    <div class="toggle-row">
+      <input type="checkbox" id="showMinorAspects">
+      <label for="showMinorAspects">Show minor aspects (Quincunx 150°, Semi-sextile 30°, Semi-square 45°, Sesquiquadrate 135°)</label>
+    </div>
+    <div class="small">
+      Important: Swiss Ephemeris WASM mode is the professional calculation mode and adds Placidus house support for Astro.com-style validation. Astronomy Engine remains available as a fallback if the Swiss WASM module cannot be loaded. For Astro.com comparison, use Tropical zodiac and Placidus houses.
+    </div>
+  </div>
+
+
+
+  <div class="card">
+    <h3 class="section-title">Solar Return Chart <span class="free-badge">Free</span></h3>
+    <div class="note">Calculate the exact moment the Sun returns to the natal Sun longitude, then cast a yearly chart for the selected Solar Return location.</div>
+    <div class="grid" style="margin-top:14px;">
+      <div><label>Solar Return Year</label><input type="number" id="solarYear" value="2026" min="1900" max="2100"></div>
+      <div class="wide">
+        <label>Solar Return Location</label>
+        <select id="solarPlace" onchange="applySolarPlace()"></select>
+        <div class="coord-note" id="solarPlaceNote"></div>
+      </div>
+      <div><label>SR Latitude</label><input type="number" id="solarLat" value="16.80528" step="0.00001"></div>
+      <div><label>SR Longitude</label><input type="number" id="solarLon" value="96.15611" step="0.00001"></div>
+      <div><label>SR Timezone UTC Offset</label><input type="number" id="solarTz" value="6.5" step="0.25"></div>
+      <div>
+        <label>Australia DST</label>
+        <select id="solarAutoDst">
+          <option value="auto" selected>Auto for AU cities</option>
+          <option value="off">Manual offset only</option>
+        </select>
+      </div>
+      <div><button class="secondary" onclick="useBirthPlaceForSolarReturn()">Use Birthplace</button></div>
+    </div>
+    <button onclick="calculateSolarReturn()">Calculate Solar Return</button>
+    <div class="small">Solar Return uses Swiss Ephemeris only. It is isolated from the natal chart calculation so the validated natal engine remains stable. Australian Solar Return locations include DST-aware local time display where applicable.</div>
+  </div>
+
+  <div id="solar-results" class="card" style="display:none;">
+    <h3 class="section-title">Solar Return Results</h3>
+    <div class="note" id="solar-summary"></div>
+    <div class="audit" id="solar-audit"></div>
+    <div id="solar-wheel"></div>
+
+    <h3 class="section-title">Solar Return Planet Positions</h3>
+    <table>
+      <thead>
+        <tr><th>Body</th><th>Sign</th><th>Degree</th><th>DMS</th><th>House</th><th>Motion</th></tr>
+      </thead>
+      <tbody id="solar-planet-table"></tbody>
+    </table>
+
+    <h3 class="section-title" style="margin-top:22px;">Solar Return Major Aspects</h3>
+    <div id="solar-aspects" class="aspect-grid"></div>
+  </div>
+
+  <div class="pro-card-wrapper">
+  <div class="card">
+    <h3 class="section-title">Secondary Progressed Chart</h3>
+    <div class="note">Compare progressed planets against the natal chart using the standard secondary progression method: one day after birth equals one year of life.</div>
+    <div class="grid" style="margin-top:14px;">
+      <div><label>Progression Target Date</label><input type="date" id="progressedTargetDate" value="2026-04-29"></div>
+      <div><label>Progression Method</label><select id="progressedMethod"><option value="secondary" selected>Secondary progression, 1 day = 1 year</option></select></div>
+      <div><label>Aspect Orb</label><select id="progressedOrb"><option value="1" selected>1° tight</option><option value="1.5">1.5° standard</option><option value="2">2° wider</option></select></div>
+    </div>
+    <div class="quick-row">
+      <button class="secondary" onclick="setProgressedDateToday()">Set Progressed Date to Today</button>
+    </div>
+    <button onclick="calculateProgressedComparison()">Calculate Progressed vs Natal</button>
+    <div class="small">Progressions use Swiss Ephemeris only. This module compares progressed planets to natal planets and highlights exact activations. Progressed houses/angles are not used for interpretation in this first stable version.</div>
+  </div>
+  <div class="pro-gate-overlay">
+    <div class="pro-gate-badge">⭐ Pro Feature</div>
+    <div class="pro-gate-icon">📈</div>
+    <div class="pro-gate-title">Secondary Progressions</div>
+    <div class="pro-gate-subtitle">Track how your natal chart evolves over time — one of the most powerful predictive techniques in astrology.</div>
+    <div class="pro-gate-features">
+      <span>Progressed Sun / Moon</span>
+      <span>Natal activations</span>
+      <span>Year-by-year timing</span>
+    </div>
+    <a class="pro-gate-btn" href="https://mojocontrolsolutions.com.au" target="_blank">🔓 Unlock AstroCalc Pro</a>
+  </div>
+  </div>
+
+  <div id="progressed-results" class="card" style="display:none;">
+    <h3 class="section-title">Progressed vs Natal Results</h3>
+    <div class="note" id="progressed-summary"></div>
+    <div class="audit" id="progressed-audit"></div>
+    <h3 class="section-title">Progressed Planet Positions</h3>
+    <table><thead><tr><th>Body</th><th>Natal Position</th><th>Progressed Position</th><th>Progressed Movement</th><th>Motion</th></tr></thead><tbody id="progressed-planet-table"></tbody></table>
+    <h3 class="section-title" style="margin-top:22px;">Progressed Planet Activations to Natal Chart</h3>
+    <div id="progressed-aspects" class="aspect-grid"></div>
+  </div>
+
+
+  <div class="pro-card-wrapper">
+  <div class="card">
+    <h3 class="section-title">Transit Chart vs Natal Chart</h3>
+    <div class="note">Compare live/selected-date transiting planets against the natal chart. This is useful for timing activations such as Transit Jupiter conjunct Natal Sun or Transit Saturn square Natal Moon.</div>
+    <div class="grid" style="margin-top:14px;">
+      <div><label>Transit Date</label><input type="date" id="transitDate" value="2026-04-29"></div>
+      <div><label>Transit Time Local</label><input type="time" id="transitTime" value="12:00"></div>
+      <div><label>Transit Timezone UTC Offset</label><input type="number" id="transitTz" value="10" step="0.25"></div>
+      <div class="wide"><label>Transit Location</label><select id="transitPlace" onchange="applyTransitPlace()"></select><div class="coord-note" id="transitPlaceNote"></div></div>
+      <div><label>Transit Latitude</label><input type="number" id="transitLat" value="-37.81360" step="0.00001"></div>
+      <div><label>Transit Longitude</label><input type="number" id="transitLon" value="144.96310" step="0.00001"></div>
+      <div><label>Australia DST</label><select id="transitAutoDst"><option value="auto" selected>Auto for AU cities</option><option value="off">Manual offset only</option></select></div>
+      <div><label>Aspect Orb</label><select id="transitOrb"><option value="1">1° tight</option><option value="2" selected>2° standard</option><option value="3">3° wider</option></select></div>
+      <div><button class="secondary" onclick="useBirthPlaceForTransit()">Use Birthplace</button></div>
+    </div>
+    <div class="quick-row">
+      <button class="secondary" onclick="setTransitDateTimeNow()">Set Transit Date/Time to Now</button>
+      <button class="secondary" onclick="setTransitDateTodayNoon()">Set Transit Date to Today 12:00</button>
+    </div>
+    <button onclick="calculateTransitComparison()">Calculate Transit vs Natal</button>
+    <div class="tz-warning" id="transit-tz-warning">⚠ Transit timezone (UTC <span id="warn-transit-tz"></span>) differs from natal timezone (UTC <span id="warn-natal-tz"></span>). This is normal if you are currently in a different location — just confirm both offsets are correct before interpreting.</div>
+    <div class="small">Transit comparison uses Swiss Ephemeris only. Planet-to-planet transit aspects do not depend on location, but transit ASC/MC and transit houses do.</div>
+  </div>
+  <div class="pro-gate-overlay">
+    <div class="pro-gate-badge">⭐ Pro Feature</div>
+    <div class="pro-gate-icon">🔭</div>
+    <div class="pro-gate-title">Transit Chart vs Natal</div>
+    <div class="pro-gate-subtitle">See exactly which planets are activating your natal chart right now — the essential tool for day-to-day timing and life event forecasting.</div>
+    <div class="pro-gate-features">
+      <span>Live transit positions</span>
+      <span>Bi-wheel chart</span>
+      <span>Aspect activations</span>
+    </div>
+    <a class="pro-gate-btn" href="https://mojocontrolsolutions.com.au" target="_blank">🔓 Unlock AstroCalc Pro</a>
+  </div>
+  </div>
+
+  <div id="transit-results" class="card" style="display:none;">
+    <h3 class="section-title">Transit vs Natal Results</h3>
+    <div class="note" id="transit-summary"></div>
+    <div class="audit" id="transit-audit"></div>
+    <div id="transit-wheel"></div>
+    <h3 class="section-title" style="margin-top:22px;">Natal + Transit Bi-Wheel</h3>
+    <div id="transit-biwheel"></div>
+    <div class="biwheel-note">Inner ring = natal planets. Outer ring = transit planets. ASC reference is the natal Ascendant.</div>
+    <h3 class="section-title">Transit Planet Positions</h3>
+    <table><thead><tr><th>Body</th><th>Natal Position</th><th>Transit Position</th><th>Transit House</th><th>Motion</th></tr></thead><tbody id="transit-planet-table"></tbody></table>
+    <h3 class="section-title" style="margin-top:22px;">Transit Planet Activations to Natal Chart</h3>
+    <div id="transit-aspects" class="aspect-grid"></div>
+  </div>
+
+
+  <div class="pro-card-wrapper">
+  <div class="card">
+    <h3 class="section-title">AI Export & Prompt Builder</h3>
+    <div class="note">Export the calculated chart data as structured JSON, or generate a clean AI prompt for ChatGPT, Claude, Gemini or a local model. This layer is separate from the calculator engine, so it does not affect the Swiss Ephemeris calculations.</div>
+    <div class="grid" style="margin-top:14px;">
+      <div>
+        <label>Forecast Focus</label>
+        <select id="aiForecastFocus">
+          <option value="full" selected>Full life forecast</option>
+          <option value="career">Career / public life</option>
+          <option value="relationships">Relationships / family</option>
+          <option value="health">Health / wellbeing themes</option>
+          <option value="spiritual">Personal growth / spiritual direction</option>
+        </select>
+      </div>
+      <div>
+        <label>Report Style</label>
+        <select id="aiReportStyle">
+          <option value="balanced" selected>Balanced and practical</option>
+          <option value="detailed">Detailed professional report</option>
+          <option value="concise">Concise summary</option>
+          <option value="coaching">Supportive coaching style</option>
+        </select>
+      </div>
+      <div>
+        <label>Include Health Disclaimer</label>
+        <select id="aiHealthDisclaimer">
+          <option value="yes" selected>Yes</option>
+          <option value="no">No</option>
+        </select>
+      </div>
+    </div>
+    <div class="quick-row">
+      <button class="secondary" onclick="generateAiJsonExport()">Generate JSON Export</button>
+      <button class="secondary" onclick="generateAiPromptExport()">Generate AI Prompt</button>
+      <button class="secondary" onclick="copyAiExportText()">Copy Output</button>
+      <button class="secondary" onclick="downloadAiJsonFile()">Download JSON</button>
+    </div>
+    <div class="small" id="ai-export-status"><span class="status-pill">No AI export generated yet.</span></div>
+    <textarea id="ai-export-box" class="export-box" placeholder="Generated JSON or AI prompt will appear here..."></textarea>
+  </div>
+  <div class="pro-gate-overlay">
+    <div class="pro-gate-badge">⭐ Pro Feature</div>
+    <div class="pro-gate-icon">🤖</div>
+    <div class="pro-gate-title">AI Export & Prompt Builder</div>
+    <div class="pro-gate-subtitle">Export your full chart as structured JSON or generate a ready-to-paste AI prompt for ChatGPT, Claude, or Gemini — personalised forecasts in seconds.</div>
+    <div class="pro-gate-features">
+      <span>JSON chart export</span>
+      <span>AI prompt builder</span>
+      <span>Download to file</span>
+    </div>
+    <a class="pro-gate-btn" href="https://mojocontrolsolutions.com.au" target="_blank">🔓 Unlock AstroCalc Pro</a>
+  </div>
+  </div>
+
+  <div id="results" class="card" style="display:none;">
+    <div class="note" id="summary"></div>
+    <div class="audit" id="audit"></div>
+    <div id="wheel"></div>
+
+    <h3 class="section-title">Planet Positions</h3>
+    <table>
+      <thead>
+        <tr><th>Body</th><th>Sign</th><th>Degree</th><th>DMS</th><th>House</th><th>Motion</th></tr>
+      </thead>
+      <tbody id="planet-table"></tbody>
+    </table>
+
+    <h3 class="section-title" style="margin-top:22px;">Major Aspects</h3>
+    <div id="aspects" class="aspect-grid"></div>
+  </div>
+  
+   <!-- === WATERMARK / CREDIT SNIPPET === -->
+  <div style="text-align: center; margin: 50px 0 30px; padding: 25px 15px; color: rgba(160, 160, 210, 0.45); font-size: 13.5px; line-height: 1.45; border-top: 1px solid #2d2d5f;">
+    Prepared by Aung Moe Kyaw<br>
+    AI-Augmented Software Developer<br>
+    MOJO Control Solutions Pty. Ltd. — ABN 33 563 327 309<br>
+    Developed on 4 May 2026
+  </div>
+</div>
+
+<script>
+const SIGNS = [
+  "♈ Aries", "♉ Taurus", "♊ Gemini", "♋ Cancer", "♌ Leo", "♍ Virgo",
+  "♎ Libra", "♏ Scorpio", "♐ Sagittarius", "♑ Capricorn", "♒ Aquarius", "♓ Pisces"
+];
+
+const GLYPHS = {
+  Sun:"☉", Moon:"☽", Mercury:"☿", Venus:"♀", Mars:"♂", Jupiter:"♃", Saturn:"♄",
+  Uranus:"♅", Neptune:"♆", Pluto:"♇", "Mean North Node":"☊", Ascendant:"ASC", MC:"MC",
+  "Chiron":"⚷", "Lilith (Mean)":"⚸", "Vertex":"Vx"
+};
+
+const BIRTH_PLACES = [
+  { name:"Taunggyi, Shan State, Myanmar", lat:20.783633, lon:97.035361, tz:6.5 },
+  { name:"Yangon, Myanmar", lat:16.805280, lon:96.156110, tz:6.5 },
+  { name:"Chauk, Magway Region, Myanmar", lat:20.899210, lon:94.817840, tz:6.5 },
+  { name:"Magway, Myanmar", lat:20.149560, lon:94.932460, tz:6.5 },
+  { name:"Mandalay, Myanmar", lat:21.958828, lon:96.089103, tz:6.5 },
+  { name:"Naypyidaw, Myanmar", lat:19.763306, lon:96.078510, tz:6.5 },
+  { name:"Bagan / Nyaung-U, Myanmar", lat:21.172222, lon:94.928611, tz:6.5 },
+  { name:"Meiktila, Myanmar", lat:20.877760, lon:95.858440, tz:6.5 },
+  { name:"Monywa, Myanmar", lat:22.108560, lon:95.135830, tz:6.5 },
+  { name:"Pakokku, Myanmar", lat:21.334890, lon:95.084380, tz:6.5 },
+  { name:"Pyay / Prome, Myanmar", lat:18.824640, lon:95.222160, tz:6.5 },
+  { name:"Bago, Myanmar", lat:17.335210, lon:96.481350, tz:6.5 },
+  { name:"Mawlamyine, Mon State, Myanmar", lat:16.490510, lon:97.628250, tz:6.5 },
+  { name:"Pathein, Ayeyarwady Region, Myanmar", lat:16.779190, lon:94.732120, tz:6.5 },
+  { name:"Sittwe, Rakhine State, Myanmar", lat:20.146240, lon:92.898350, tz:6.5 },
+  { name:"Myitkyina, Kachin State, Myanmar", lat:25.383270, lon:97.396370, tz:6.5 },
+  { name:"Lashio, Shan State, Myanmar", lat:22.935900, lon:97.749800, tz:6.5 },
+  { name:"Kengtung, Shan State, Myanmar", lat:21.290000, lon:99.600000, tz:6.5 },
+  { name:"Kalaw, Shan State, Myanmar", lat:20.633330, lon:96.566670, tz:6.5 },
+  { name:"Melbourne, VIC, Australia", lat:-37.813629, lon:144.963058, tz:10, auDst:true },
+  { name:"Perth, WA, Australia", lat:-31.952240, lon:115.861397, tz:8, auDst:false },
+  { name:"Sydney, NSW, Australia", lat:-33.868820, lon:151.209296, tz:10, auDst:true },
+  { name:"Brisbane, QLD, Australia", lat:-27.469770, lon:153.025131, tz:10, auDst:false },
+  { name:"Adelaide, SA, Australia", lat:-34.928499, lon:138.600746, tz:9.5, auDst:true },
+  { name:"Hobart, TAS, Australia", lat:-42.882137, lon:147.327195, tz:10, auDst:true },
+  { name:"Darwin, NT, Australia", lat:-12.463440, lon:130.845642, tz:9.5, auDst:false },
+  { name:"Canberra, ACT, Australia", lat:-35.280937, lon:149.130009, tz:10, auDst:true },
+  { name:"Custom / Manual Coordinates", lat:null, lon:null, tz:6.5 }
+];
+
+
+function signNameFromLon(lon) { return SIGNS[signIndex(lon)].replace(/^.. /, ""); }
+function absoluteZodiac(sign, deg) { return ["Aries","Taurus","Gemini","Cancer","Leo","Virgo","Libra","Scorpio","Sagittarius","Capricorn","Aquarius","Pisces"].indexOf(sign) * 30 + deg; }
+function angularDifference(a, b) { let d = Math.abs(rev(a - b)); return d > 180 ? 360 - d : d; }
+
+const SWISS_DATA_CDN = "https://cdn.jsdelivr.net/npm/swisseph-wasm@0.0.5/wasm/swisseph.data";
+let swissInstance = null;
+let swissLoadMessage = "Not loaded";
+
+function showLoading(msg) {
+  document.getElementById("loading-msg").textContent = msg || "Calculating…";
+  document.getElementById("loading-overlay").classList.add("active");
+}
+function hideLoading() {
+  document.getElementById("loading-overlay").classList.remove("active");
+}
+
+class SwissEph {
+  SE_SUN=0;SE_MOON=1;SE_MERCURY=2;SE_VENUS=3;SE_MARS=4;SE_JUPITER=5;SE_SATURN=6;
+  SE_URANUS=7;SE_NEPTUNE=8;SE_PLUTO=9;SE_MEAN_NODE=10;SE_MEAN_APOG=12;SE_CHIRON=15;
+  SEFLG_SWIEPH=2;SEFLG_SPEED=256;SEFLG_SIDEREAL=65536;SE_SIDM_LAHIRI=1;
+  async initSwissEph() {
+    const Swisseph = window._SwissephLoader;
+    if (!Swisseph) throw new Error("Swiss Ephemeris module not yet loaded — please wait a moment and try again.");
+    this.SweModule = await Swisseph({
+      locateFile: (path) => {
+        if (path.endsWith(".data")) return SWISS_DATA_CDN;
+        if (path.endsWith(".wasm")) return "https://cdn.jsdelivr.net/npm/swisseph-wasm@0.0.5/wasm/swisseph.wasm";
+        return path;
+      }
+    });
+    if (!this.SweModule.HEAP32) this.SweModule.HEAP32 = new Int32Array(this.SweModule.HEAPF64.buffer);
+    this.SweModule.ccall("swe_set_ephe_path","string",["string"],["sweph"]);
+  }
+  julday(y,m,d,h){ return this.SweModule.ccall("swe_julday","number",["number","number","number","number","number"],[y,m,d,h,1]); }
+  calc_ut(jd,body,flags){
+    const rp=this.SweModule._malloc(6*8),ep=this.SweModule._malloc(256);
+    const rf=this.SweModule.ccall("swe_calc_ut","number",["number","number","number","pointer","pointer"],[jd,body,flags,rp,ep]);
+    if(rf<0){const e=this.SweModule.UTF8ToString(ep);this.SweModule._free(rp);this.SweModule._free(ep);throw new Error(e);}
+    const r=this.SweModule.HEAPF64.slice(rp/8,rp/8+6);
+    this.SweModule._free(rp);this.SweModule._free(ep);return r;
+  }
+  houses(jd,lat,lon,sys){
+    const cp=this.SweModule._malloc(13*8),ap=this.SweModule._malloc(10*8);
+    this.SweModule.ccall("swe_houses","number",["number","number","number","number","pointer","pointer"],[jd,lat,lon,sys.charCodeAt(0),cp,ap]);
+    const cusps=this.SweModule.HEAPF64.slice(cp/8,cp/8+13);
+    const ascmc=this.SweModule.HEAPF64.slice(ap/8,ap/8+10);
+    this.SweModule._free(cp);this.SweModule._free(ap);
+    return {cusps,ascmc};
+  }
+  set_sid_mode(m,t,a){this.SweModule.ccall("swe_set_sid_mode","void",["number","number","number"],[m,t,a]);}
+  get_ayanamsa(jd){return this.SweModule.ccall("swe_get_ayanamsa","number",["number"],[jd]);}
+}
+
+async function getSwissEph() {
+  if (swissInstance) return swissInstance;
+  showLoading("Loading Swiss Ephemeris WASM (first load only, ~12 MB)…");
+  try {
+    // Wait up to 8 seconds for the <script type="module"> to finish loading
+    for (let i = 0; i < 80 && !window._SwissephLoader; i++) {
+      await new Promise(r => setTimeout(r, 100));
+    }
+    swissInstance = new SwissEph();
+    await swissInstance.initSwissEph();
+    swissLoadMessage = "Swiss Ephemeris WASM active";
+  } catch (err) {
+    swissLoadMessage = "Swiss WASM load failed: " + (err?.message || err);
+    throw err;
+  } finally {
+    hideLoading();
+  }
+  return swissInstance;
+}
+
+function decimalUtcHour(utcDate) {
+  return utcDate.getUTCHours() + utcDate.getUTCMinutes()/60 + utcDate.getUTCSeconds()/3600 + utcDate.getUTCMilliseconds()/3600000;
+}
+
+function swissPlanetMap(swe) {
+  const bodies = [
+    {name:"Sun", id:swe.SE_SUN}, {name:"Moon", id:swe.SE_MOON}, {name:"Mercury", id:swe.SE_MERCURY},
+    {name:"Venus", id:swe.SE_VENUS}, {name:"Mars", id:swe.SE_MARS}, {name:"Jupiter", id:swe.SE_JUPITER},
+    {name:"Saturn", id:swe.SE_SATURN}, {name:"Uranus", id:swe.SE_URANUS}, {name:"Neptune", id:swe.SE_NEPTUNE},
+    {name:"Pluto", id:swe.SE_PLUTO}, {name:"Mean North Node", id:swe.SE_MEAN_NODE}
+  ];
+  if (typeof swe.SE_CHIRON !== "undefined") bodies.push({name:"Chiron", id:swe.SE_CHIRON});
+  if (typeof swe.SE_MEAN_APOG !== "undefined") bodies.push({name:"Lilith (Mean)", id:swe.SE_MEAN_APOG});
+  return bodies;
+}
+
+function extractSwissPosition(pos) {
+  if (Array.isArray(pos) || ArrayBuffer.isView(pos)) return { lon: rev(Number(pos[0])), speed: Number(pos[3] || 0) };
+  return { lon: rev(Number(pos.longitude ?? pos.lon ?? pos[0])), speed: Number(pos.longitudeSpeed ?? pos.speed ?? pos[3] ?? 0) };
+}
+
+function extractHouseData(houses, fallbackAsc, fallbackMc) {
+  let cusps = [];
+  let asc = fallbackAsc;
+  let mc = fallbackMc;
+  if (Array.isArray(houses) || ArrayBuffer.isView(houses)) {
+    const arr = Array.from(houses).map(Number);
+    if (arr.length >= 12) cusps = arr.slice(0, 12).map(rev);
+  } else if (houses && typeof houses === "object") {
+    const rawCusps = houses.cusps || houses.houseCusps || houses.houses || houses.cusp || houses[0];
+    if (rawCusps) cusps = Array.from(rawCusps).map(Number).filter(n => !isNaN(n));
+    if (cusps.length === 13 && Math.abs(cusps[0]) < 1e-9) cusps = cusps.slice(1);
+    if (cusps.length > 12) cusps = cusps.slice(0, 12);
+    const ascmc = houses.ascmc || houses.ascMc || houses.points || houses[1];
+    asc = Number(houses.ascendant ?? houses.asc ?? houses.ASC ?? (ascmc ? ascmc[0] : asc));
+    mc = Number(houses.mc ?? houses.MC ?? (ascmc ? ascmc[1] : mc));
+  }
+  if (!Number.isFinite(asc)) asc = fallbackAsc;
+  if (!Number.isFinite(mc)) mc = fallbackMc;
+  return { cusps: cusps.map(rev), asc: rev(asc), mc: rev(mc) };
+}
+
+function inZodiacArc(value, start, end) {
+  value = rev(value); start = rev(start); end = rev(end);
+  if (start <= end) return value >= start && value < end;
+  return value >= start || value < end;
+}
+
+function placidusHouseFromCusps(lon, cusps) {
+  if (!cusps || cusps.length < 12) return null;
+  for (let i = 0; i < 12; i++) {
+    if (inZodiacArc(lon, cusps[i], cusps[(i + 1) % 12])) return i + 1;
+  }
+  return null;
+}
+
+function calculateVertex(jd, lat, lon) {
+  const lst = siderealTime(jd, lon) * RAD;
+  const eps = obliquity(jd);
+  const phi = lat * RAD;
+  const y = Math.cos(lst);
+  const x = -Math.sin(lst) * Math.cos(eps) + Math.tan(phi) * Math.sin(eps);
+  return rev(Math.atan2(y, x) * DEG + 180);
+}
+
+async function buildSwissChart(dateStr, timeStr, tzOffset, lat, lon, zodiac, system) {
+  const swe = await getSwissEph();
+  const utcDate = dateFromLocal(dateStr, timeStr, tzOffset);
+  const jd = swe.julday(utcDate.getUTCFullYear(), utcDate.getUTCMonth() + 1, utcDate.getUTCDate(), decimalUtcHour(utcDate));
+  let flags = swe.SEFLG_SWIEPH | swe.SEFLG_SPEED;
+  if (zodiac === "sidereal") {
+    swe.set_sid_mode(swe.SE_SIDM_LAHIRI, 0, 0);
+    flags |= swe.SEFLG_SIDEREAL;
+  }
+  const results = swissPlanetMap(swe).map(p => {
+    try {
+      const pos = extractSwissPosition(swe.calc_ut(jd, p.id, flags));
+      const rowClass = p.name === "Chiron" ? "chiron-row" : p.name === "Lilith (Mean)" ? "lilith-row" : "";
+      return { name:p.name, lon:pos.lon, special:rowClass, motion: pos.speed < -0.0001 ? "Retrograde ℞" : "Direct" };
+    } catch(e) { return null; }
+  }).filter(Boolean);
+  const fallbackAsc = zodiacLon(calculateAscendant(jd, lat, lon), jd, zodiac);
+  const fallbackMc = zodiacLon(calculateMC(jd, lon), jd, zodiac);
+  const vertexLon = zodiacLon(calculateVertex(jd, lat, lon), jd, zodiac);
+  let houseData = { cusps:[], asc:fallbackAsc, mc:fallbackMc };
+  if (system === "placidus" && typeof swe.houses === "function") {
+    const houseResult = swe.houses(jd, lat, lon, "P");
+    houseData = extractHouseData(houseResult, fallbackAsc, fallbackMc);
+    if (zodiac === "sidereal") {
+      const ayan = typeof swe.get_ayanamsa === "function" ? swe.get_ayanamsa(jd) : lahiriAyanamsa(jd);
+      houseData.asc = rev(houseData.asc - ayan);
+      houseData.mc = rev(houseData.mc - ayan);
+      houseData.cusps = houseData.cusps.map(c => rev(c - ayan));
+    }
+  }
+  results.push({ name:"Vertex", lon:vertexLon, special:"vertex-row", motion:"" });
+  results.push({ name:"Ascendant", lon:houseData.asc, special:"asc-row", motion:"" });
+  results.push({ name:"MC", lon:houseData.mc, special:"mc-row", motion:"" });
+  return { results, asc:houseData.asc, mc:houseData.mc, cusps:houseData.cusps, jd, utcDate, engineName:"Swiss Ephemeris WASM" };
+}
+
+function buildAstronomyChart(dateStr, timeStr, tzOffset, lat, lon, zodiac) {
+  const utcDate = dateFromLocal(dateStr, timeStr, tzOffset);
+  const jd = julianDateFromLocal(dateStr, timeStr, tzOffset);
+  const astroTime = Astronomy.MakeTime(utcDate);
+  const asc = zodiacLon(calculateAscendant(jd, lat, lon), jd, zodiac);
+  const mc = zodiacLon(calculateMC(jd, lon), jd, zodiac);
+  const bodies = ["Sun", "Moon", "Mercury", "Venus", "Mars", "Jupiter", "Saturn", "Uranus", "Neptune", "Pluto"];
+  const results = bodies.map(name => {
+    const tropical = getPlanetLongitude(name, astroTime);
+    const lonZ = zodiacLon(tropical, jd, zodiac);
+    const speed = planetSpeed(name, utcDate);
+    return { name, lon: lonZ, special:"", motion: speed < -0.0001 ? "Retrograde ℞" : "Direct" };
+  });
+  results.push({ name:"Mean North Node", lon:zodiacLon(meanNorthNode(jd), jd, zodiac), special:"", motion:"Retrograde ℞" });
+  results.push({ name:"Ascendant", lon:asc, special:"asc-row", motion:"" });
+  results.push({ name:"MC", lon:mc, special:"mc-row", motion:"" });
+  return { results, asc, mc, cusps:[], jd, utcDate, engineName:"Astronomy Engine fallback" };
+}
+
+const RAD = Math.PI / 180;
+const DEG = 180 / Math.PI;
+
+function rev(d) { return ((d % 360) + 360) % 360; }
+
+function populateBirthPlaces() {
+  const select = document.getElementById("birthPlace");
+  select.innerHTML = BIRTH_PLACES.map((p, idx) => `<option value="${idx}">${p.name}</option>`).join("");
+}
+
+function applyBirthPlace() {
+  const idx = Number(document.getElementById("birthPlace").value);
+  const place = BIRTH_PLACES[idx];
+  if (!place) return;
+
+  if (place.lat !== null && place.lon !== null) {
+    document.getElementById("lat").value = place.lat.toFixed(5);
+    document.getElementById("lon").value = place.lon.toFixed(5);
+    document.getElementById("tz").value = place.tz;
+    document.getElementById("placeNote").innerHTML =
+      `${place.name}: ${coordLabel(place.lat, place.lon)}, standard UTC offset ${place.tz >= 0 ? "+" : ""}${place.tz}`;
+  } else {
+    document.getElementById("tz").value = place.tz;
+    document.getElementById("placeNote").innerHTML =
+      `Manual mode: type your own latitude and longitude. Keep UTC +6:30 for Myanmar births unless you know a historical correction is required.`;
+  }
+}
+
+function setAstroComMode() {
+  document.getElementById("zodiac").value = "tropical";
+  document.getElementById("houseSystem").value = "placidus";
+  document.getElementById("calcEngine").value = "swiss";
+  calculateChart();
+}
+
+function dateFromLocal(dateStr, timeStr, tzOffset) {
+  const [y, m, d] = dateStr.split("-").map(Number);
+  const [hh, mm] = timeStr.split(":").map(Number);
+  return new Date(Date.UTC(y, m - 1, d, hh, mm) - tzOffset * 3600000);
+}
+
+function julianDateFromLocal(dateStr, timeStr, tzOffset) {
+  return dateFromLocal(dateStr, timeStr, tzOffset).getTime() / 86400000 + 2440587.5;
+}
+
+function siderealTime(jd, lon) {
+  const T = (jd - 2451545.0) / 36525;
+  const gst = rev(280.46061837 + 360.98564736629 * (jd - 2451545.0) + 0.000387933 * T * T - (T * T * T) / 38710000);
+  return rev(gst + lon);
+}
+
+function obliquity(jd) {
+  const T = (jd - 2451545.0) / 36525;
+  const seconds = 21.448 - T * (46.8150 + T * (0.00059 - T * 0.001813));
+  return (23 + 26/60 + seconds/3600) * RAD;
+}
+
+function calculateAscendant(jd, lat, lon) {
+  const lst = siderealTime(jd, lon) * RAD;
+  const eps = obliquity(jd);
+  const phi = lat * RAD;
+  const y = -Math.cos(lst);
+  const x = Math.sin(lst) * Math.cos(eps) + Math.tan(phi) * Math.sin(eps);
+  return rev(Math.atan2(y, x) * DEG + 180);
+}
+
+function calculateMC(jd, lon) {
+  const lst = siderealTime(jd, lon) * RAD;
+  const eps = obliquity(jd);
+  return rev(Math.atan2(Math.sin(lst), Math.cos(lst) * Math.cos(eps)) * DEG);
+}
+
+function lahiriAyanamsa(jd) {
+  return 23.853055 + 0.013968 * ((jd - 2451545.0) / 365.2422);
+}
+
+function zodiacLon(lon, jd, zodiac) {
+  return zodiac === "sidereal" ? rev(lon - lahiriAyanamsa(jd)) : rev(lon);
+}
+
+function getPlanetLongitude(bodyName, astroTime) {
+  if (bodyName === "Sun") return rev(Astronomy.SunPosition(astroTime).elon);
+  if (bodyName === "Moon") return rev(Astronomy.EclipticGeoMoon(astroTime).lon);
+  const vec = Astronomy.GeoVector(bodyName, astroTime, true);
+  const ecl = Astronomy.Ecliptic(vec);
+  return rev(ecl.elon);
+}
+
+function meanNorthNode(jd) {
+  const T = (jd - 2451545.0) / 36525;
+  return rev(125.04452 - 1934.136261 * T + 0.0020708 * T*T + (T*T*T)/450000);
+}
+
+function planetSpeed(bodyName, utcDate) {
+  if (bodyName === "Mean North Node") return -0.05295;
+  const before = new Date(utcDate.getTime() - 12 * 3600000);
+  const after  = new Date(utcDate.getTime() + 12 * 3600000);
+  const t1 = Astronomy.MakeTime(before);
+  const t2 = Astronomy.MakeTime(after);
+  let a = getPlanetLongitude(bodyName, t1);
+  let b = getPlanetLongitude(bodyName, t2);
+  let diff = b - a;
+  if (diff > 180) diff -= 360;
+  if (diff < -180) diff += 360;
+  return diff;
+}
+
+function signIndex(lon) { return Math.floor(rev(lon) / 30); }
+function signText(lon) { return SIGNS[signIndex(lon)]; }
+function degreeDec(lon) { return rev(lon) % 30; }
+function degreeText(lon) { return degreeDec(lon).toFixed(2) + "°"; }
+function degreeDms(lon) {
+  const dFloat = degreeDec(lon);
+  let d = Math.floor(dFloat);
+  let mFloat = (dFloat - d) * 60;
+  let m = Math.floor(mFloat);
+  let s = Math.round((mFloat - m) * 60);
+  if (s === 60) { s = 0; m += 1; }
+  if (m === 60) { m = 0; d += 1; }
+  return `${d}° ${String(m).padStart(2,"0")}' ${String(s).padStart(2,"0")}"`;
+}
+
+function wholeSignHouse(planetLon, ascLon) {
+  return ((signIndex(planetLon) - signIndex(ascLon) + 12) % 12) + 1;
+}
+
+function equalHouse(planetLon, ascLon) {
+  return Math.floor(rev(planetLon - ascLon) / 30) + 1;
+}
+
+function houseOf(planetLon, ascLon, system) {
+  return system === "equal" ? equalHouse(planetLon, ascLon) : wholeSignHouse(planetLon, ascLon);
+}
+
+function aspectBetween(a, b, includeMinor) {
+  let diff = Math.abs(rev(a - b));
+  if (diff > 180) diff = 360 - diff;
+  const major = [
+    {name:"Conjunction", angle:0, orb:8, glyph:"☌", minor:false},
+    {name:"Sextile", angle:60, orb:5, glyph:"⚹", minor:false},
+    {name:"Square", angle:90, orb:6, glyph:"□", minor:false},
+    {name:"Trine", angle:120, orb:6, glyph:"△", minor:false},
+    {name:"Opposition", angle:180, orb:8, glyph:"☍", minor:false},
+    {name:"Quincunx", angle:150, orb:3, glyph:"⚻", minor:true},
+    {name:"Semi-sextile", angle:30, orb:2, glyph:"⚺", minor:true},
+    {name:"Semi-square", angle:45, orb:2, glyph:"∠", minor:true},
+    {name:"Sesquiquadrate", angle:135, orb:2, glyph:"⚼", minor:true},
+  ];
+  for (const asp of major) {
+    if (asp.minor && !includeMinor) continue;
+    const orb = Math.abs(diff - asp.angle);
+    if (orb <= asp.orb) return {...asp, orb};
+  }
+  return null;
+}
+
+function renderAspects(results) {
+  const includeMinor = document.getElementById("showMinorAspects")?.checked || false;
+  const planets = results.filter(p => !["Ascendant","MC","Vertex"].includes(p.name));
+  const found = [];
+  for (let i = 0; i < planets.length; i++) {
+    for (let j = i + 1; j < planets.length; j++) {
+      const asp = aspectBetween(planets[i].lon, planets[j].lon, includeMinor);
+      if (asp) found.push({a:planets[i].name, b:planets[j].name, ...asp});
+    }
+  }
+  found.sort((x,y) => x.orb - y.orb);
+  document.getElementById("aspects").innerHTML = found.length
+    ? found.map(x => `<div class="aspect-card${x.minor?' minor-asp':''}"><strong>${x.a} ${x.glyph} ${x.b}</strong><br>${x.name}${x.minor?' <span style="color:var(--muted);font-size:.8rem">(minor)</span>':''}, orb ${x.orb.toFixed(2)}°</div>`).join("")
+    : `<div class="note">No aspects found within the selected orbs.</div>`;
+}
+
+function polar(cx, cy, r, deg) {
+  const a = (deg - 90) * RAD;
+  return {x: cx + r * Math.cos(a), y: cy + r * Math.sin(a)};
+}
+
+function renderAudit(dateStr, timeStr, tzOffset, utcDate, jd, zodiac, system, engineName, cusps) {
+  const astroMode = zodiac === "tropical" ? `<span class="ok">Tropical selected</span>` : `<span class="warn">Sidereal Lahiri selected</span>`;
+  const houseMode = system === "placidus"
+    ? `<span class="ok">Placidus selected - Astro.com default</span>`
+    : `<span class="warn">${system === "whole" ? "Whole Sign" : "Equal"} selected - Astro.com default is usually Placidus</span>`;
+  const cuspText = system === "placidus" && cusps && cusps.length >= 12
+    ? `<span class="ok">Placidus cusps loaded</span>`
+    : (system === "placidus" ? `<span class="warn">Placidus cusp data unavailable, fallback house logic may be used</span>` : `Not required`);
+  document.getElementById("audit").innerHTML = `
+    <div><strong>Calculation engine</strong><br>${engineName}<br><span class="small">${swissLoadMessage}</span></div>
+    <div><strong>Local birth input</strong><br>${dateStr} ${timeStr}, UTC offset ${tzOffset >= 0 ? "+" : ""}${tzOffset}</div>
+    <div><strong>Converted UTC</strong><br>${utcDate.toISOString().replace("T", " ").replace(".000Z", " UTC")}</div>
+    <div><strong>Julian Date</strong><br>${jd.toFixed(5)}</div>
+    <div><strong>Zodiac check</strong><br>${astroMode}</div>
+    <div><strong>House check</strong><br>${houseMode}<br>${cuspText}</div>
+    <div><strong>Debug hint</strong><br>For Astro.com validation, use Tropical + Placidus + Swiss Ephemeris WASM.</div>`;
+}
+
+async function calculateChart() {
+  const dateStr = document.getElementById("date").value;
+  const timeStr = document.getElementById("time").value;
+  const tzOffset = parseFloat(document.getElementById("tz").value);
+  const lat = parseFloat(document.getElementById("lat").value);
+  const lon = parseFloat(document.getElementById("lon").value);
+  const system = document.getElementById("houseSystem").value;
+  const zodiac = document.getElementById("zodiac").value;
+  const requestedEngine = document.getElementById("calcEngine")?.value || "swiss";
+
+  if (!dateStr || !timeStr || isNaN(tzOffset) || isNaN(lat) || isNaN(lon)) {
+    alert("Please enter valid date, time, timezone, latitude and longitude.");
+    return;
+  }
+
+  showLoading("Calculating natal chart…");
+  let chart;
+  try {
+    if (requestedEngine === "swiss") {
+      chart = await buildSwissChart(dateStr, timeStr, tzOffset, lat, lon, zodiac, system);
+    } else {
+      swissLoadMessage = "Swiss not selected";
+      chart = buildAstronomyChart(dateStr, timeStr, tzOffset, lat, lon, zodiac);
+    }
+  } catch (err) {
+    console.warn("Swiss Ephemeris failed; using Astronomy Engine fallback", err);
+    swissLoadMessage = "Swiss load failed, fallback active: " + (err?.message || err);
+    chart = buildAstronomyChart(dateStr, timeStr, tzOffset, lat, lon, zodiac);
+  } finally {
+    hideLoading();
+  }
+
+  const { results, asc, mc, cusps, jd, utcDate, engineName } = chart;
+  let html = "";
+  results.forEach(p => {
+    let h;
+    if (p.name === "MC") {
+      h = "MC";
+    } else if (system === "placidus" && cusps && cusps.length >= 12) {
+      h = "House " + (placidusHouseFromCusps(p.lon, cusps) || houseOf(p.lon, asc, "equal"));
+    } else {
+      h = "House " + houseOf(p.lon, asc, system === "whole" ? "whole" : "equal");
+    }
+    html += `
+      <tr class="${p.special}">
+        <td><strong>${p.name}</strong></td>
+        <td>${signText(p.lon)}</td>
+        <td>${degreeText(p.lon)}</td>
+        <td>${degreeDms(p.lon)}</td>
+        <td><span class="house-badge">${h}</span></td>
+        <td>${p.motion}</td>
+      </tr>`;
+  });
+
+  const selectedPlace = BIRTH_PLACES[Number(document.getElementById("birthPlace").value)]?.name || "Manual Coordinates";
+  
+  const houseLabel = system === "placidus" ? "Placidus" : (system === "whole" ? "Whole Sign" : "Equal");
+  document.getElementById("summary").innerHTML =
+    `` +
+    `<strong>Birthplace:</strong> ${selectedPlace} &nbsp; | &nbsp; ` +
+    `<strong>Lat/Lon:</strong> ${lat.toFixed(5)}, ${lon.toFixed(5)} &nbsp; | &nbsp; ` +
+    `<strong>Ascendant:</strong> ${degreeDms(asc)} ${SIGNS[signIndex(asc)].replace(/^.. /,'')} &nbsp; | &nbsp; ` +
+    `<strong>MC:</strong> ${degreeDms(mc)} ${SIGNS[signIndex(mc)].replace(/^.. /,'')} &nbsp; | &nbsp; ` +
+    `<strong>House:</strong> ${houseLabel} &nbsp; | &nbsp; ` +
+    `<strong>Zodiac:</strong> ${zodiac === "tropical" ? "Tropical" : "Sidereal Lahiri"} &nbsp; | &nbsp; ` +
+    `<strong>Engine:</strong> ${engineName}`;
+
+  renderAudit(dateStr, timeStr, tzOffset, utcDate, jd, zodiac, system, engineName, cusps);
+  document.getElementById("planet-table").innerHTML = html;
+  document.getElementById("results").style.display = "block";
+  renderWheel(results, asc, cusps, "wheel");
+  renderAspects(results);
+}
+
+
+
+function coordLabel(lat, lon) {
+  const ns = lat >= 0 ? "N" : "S";
+  const ew = lon >= 0 ? "E" : "W";
+  return `${Math.abs(lat).toFixed(5)}° ${ns}, ${Math.abs(lon).toFixed(5)}° ${ew}`;
+}
+
+function firstSundayUtc(year, monthIndex) {
+  const d = new Date(Date.UTC(year, monthIndex, 1, 2, 0, 0));
+  const add = (7 - d.getUTCDay()) % 7;
+  d.setUTCDate(d.getUTCDate() + add);
+  return d;
+}
+
+function isAustralianDstByUtc(utcDate) {
+  const year = utcDate.getUTCFullYear();
+  const startThisYear = firstSundayUtc(year, 9); // October
+  const endThisYear = firstSundayUtc(year, 3);   // April
+  return utcDate >= startThisYear || utcDate < endThisYear;
+}
+
+function effectiveSolarTimezone(place, utcDate, baseTz) {
+  const mode = document.getElementById("solarAutoDst")?.value || "auto";
+  if (mode !== "auto" || !place || !place.auDst) return { tz:baseTz, dstApplied:false };
+  const active = isAustralianDstByUtc(utcDate);
+  return { tz: active ? baseTz + 1 : baseTz, dstApplied:active };
+}
+
+function populateSolarPlaces() {
+  const select = document.getElementById("solarPlace");
+  if (!select) return;
+  select.innerHTML = BIRTH_PLACES.map((p, idx) => `<option value="${idx}">${p.name}</option>`).join("");
+}
+
+function applySolarPlace() {
+  const idx = Number(document.getElementById("solarPlace").value);
+  const place = BIRTH_PLACES[idx];
+  if (!place) return;
+  if (place.lat !== null && place.lon !== null) {
+    document.getElementById("solarLat").value = place.lat.toFixed(5);
+    document.getElementById("solarLon").value = place.lon.toFixed(5);
+    document.getElementById("solarTz").value = place.tz;
+    const dstNote = place.auDst ? " Standard UTC offset shown; Auto DST can add +1 hour during Australian daylight saving." : "";
+    document.getElementById("solarPlaceNote").innerHTML =
+      `${place.name}: ${coordLabel(place.lat, place.lon)}, standard UTC offset ${place.tz >= 0 ? "+" : ""}${place.tz}.${dstNote}`;
+  } else {
+    document.getElementById("solarTz").value = place.tz;
+    document.getElementById("solarPlaceNote").innerHTML =
+      `Manual Solar Return location: type latitude, longitude and timezone offset for the birthday location/residence.`;
+  }
+}
+
+function useBirthPlaceForSolarReturn() {
+  document.getElementById("solarLat").value = document.getElementById("lat").value;
+  document.getElementById("solarLon").value = document.getElementById("lon").value;
+  document.getElementById("solarTz").value = document.getElementById("tz").value;
+  const birthIdx = Number(document.getElementById("birthPlace").value);
+  if (document.getElementById("solarPlace") && BIRTH_PLACES[birthIdx]) {
+    document.getElementById("solarPlace").value = String(birthIdx);
+  }
+  const place = BIRTH_PLACES[birthIdx]?.name || "Birthplace / manual coordinates";
+  document.getElementById("solarPlaceNote").innerHTML = `Using natal birthplace/location: ${place}`;
+}
+
+function signedLongitudeDelta(current, target) {
+  return ((rev(current - target) + 540) % 360) - 180;
+}
+
+function jdToUtcDate(jd) {
+  return new Date((jd - 2440587.5) * 86400000);
+}
+
+function formatLocalFromUtc(utcDate, tzOffset) {
+  const local = new Date(utcDate.getTime() + tzOffset * 3600000);
+  const pad = n => String(n).padStart(2, "0");
+  return `${local.getUTCFullYear()}-${pad(local.getUTCMonth()+1)}-${pad(local.getUTCDate())} ${pad(local.getUTCHours())}:${pad(local.getUTCMinutes())}:${pad(local.getUTCSeconds())}`;
+}
+
+function swissSunLongitudeAtJD(swe, jd, zodiac) {
+  let flags = swe.SEFLG_SWIEPH | swe.SEFLG_SPEED;
+  if (zodiac === "sidereal") {
+    swe.set_sid_mode(swe.SE_SIDM_LAHIRI, 0, 0);
+    flags |= swe.SEFLG_SIDEREAL;
+  }
+  return extractSwissPosition(swe.calc_ut(jd, swe.SE_SUN, flags)).lon;
+}
+
+async function findSolarReturnJD(natalSunLon, year, month, day, birthTimeStr, birthTz, zodiac) {
+  const swe = await getSwissEph();
+  const approxUtc = dateFromLocal(`${year}-${String(month).padStart(2,"0")}-${String(day).padStart(2,"0")}`, birthTimeStr, birthTz);
+  const approxJd = approxUtc.getTime() / 86400000 + 2440587.5;
+
+  let lo = approxJd - 5;
+  let hi = approxJd + 5;
+  let flo = signedLongitudeDelta(swissSunLongitudeAtJD(swe, lo, zodiac), natalSunLon);
+  let fhi = signedLongitudeDelta(swissSunLongitudeAtJD(swe, hi, zodiac), natalSunLon);
+
+  // Expand the bracket if the first search window missed the return moment.
+  for (let span = 8; flo * fhi > 0 && span <= 20; span += 4) {
+    lo = approxJd - span;
+    hi = approxJd + span;
+    flo = signedLongitudeDelta(swissSunLongitudeAtJD(swe, lo, zodiac), natalSunLon);
+    fhi = signedLongitudeDelta(swissSunLongitudeAtJD(swe, hi, zodiac), natalSunLon);
+  }
+  if (flo * fhi > 0) throw new Error("Could not bracket Solar Return time. Check birth data, year and zodiac mode.");
+
+  for (let i = 0; i < 60; i++) {
+    const mid = (lo + hi) / 2;
+    const fm = signedLongitudeDelta(swissSunLongitudeAtJD(swe, mid, zodiac), natalSunLon);
+    if (Math.abs(fm) < 1e-8) return mid;
+    if (flo * fm <= 0) {
+      hi = mid;
+      fhi = fm;
+    } else {
+      lo = mid;
+      flo = fm;
+    }
+  }
+  return (lo + hi) / 2;
+}
+
+async function buildSwissChartFromJD(jd, lat, lon, zodiac, system, engineName) {
+  const swe = await getSwissEph();
+  let flags = swe.SEFLG_SWIEPH | swe.SEFLG_SPEED;
+  if (zodiac === "sidereal") {
+    swe.set_sid_mode(swe.SE_SIDM_LAHIRI, 0, 0);
+    flags |= swe.SEFLG_SIDEREAL;
+  }
+  const results = swissPlanetMap(swe).map(p => {
+    const pos = extractSwissPosition(swe.calc_ut(jd, p.id, flags));
+    return { name:p.name, lon:pos.lon, special:"", motion: pos.speed < -0.0001 ? "Retrograde ℞" : "Direct" };
+  });
+
+  const utcDate = jdToUtcDate(jd);
+  const fallbackAsc = zodiacLon(calculateAscendant(jd, lat, lon), jd, zodiac);
+  const fallbackMc = zodiacLon(calculateMC(jd, lon), jd, zodiac);
+  let houseData = { cusps:[], asc:fallbackAsc, mc:fallbackMc };
+  if (system === "placidus" && typeof swe.houses === "function") {
+    const houseResult = swe.houses(jd, lat, lon, "P");
+    houseData = extractHouseData(houseResult, fallbackAsc, fallbackMc);
+    if (zodiac === "sidereal") {
+      const ayan = typeof swe.get_ayanamsa === "function" ? swe.get_ayanamsa(jd) : lahiriAyanamsa(jd);
+      houseData.asc = rev(houseData.asc - ayan);
+      houseData.mc = rev(houseData.mc - ayan);
+      houseData.cusps = houseData.cusps.map(c => rev(c - ayan));
+    }
+  }
+  results.push({ name:"Ascendant", lon:houseData.asc, special:"asc-row", motion:"" });
+  results.push({ name:"MC", lon:houseData.mc, special:"mc-row", motion:"" });
+  return { results, asc:houseData.asc, mc:houseData.mc, cusps:houseData.cusps, jd, utcDate, engineName };
+}
+
+function renderAspectsInto(results, targetId) {
+  const includeMinor = document.getElementById("showMinorAspects")?.checked || false;
+  const planets = results.filter(p => !["Ascendant","MC","Vertex"].includes(p.name));
+  const found = [];
+  for (let i = 0; i < planets.length; i++) {
+    for (let j = i + 1; j < planets.length; j++) {
+      const asp = aspectBetween(planets[i].lon, planets[j].lon, includeMinor);
+      if (asp) found.push({a:planets[i].name, b:planets[j].name, ...asp});
+    }
+  }
+  found.sort((x,y) => x.orb - y.orb);
+  document.getElementById(targetId).innerHTML = found.length
+    ? found.map(x => `<div class="aspect-card${x.minor?' minor-asp':''}"><strong>${x.a} ${x.glyph} ${x.b}</strong><br>${x.name}${x.minor?' <span style="color:var(--muted);font-size:.8rem">(minor)</span>':''}, orb ${x.orb.toFixed(2)}°</div>`).join("")
+    : `<div class="note">No aspects found within the selected orbs.</div>`;
+}
+
+function renderWheel(results, ascLon, cusps, targetId) {
+  const tid = targetId || "wheel";
+  const cx = 300, cy = 300, rOuter = 258, rInner = 185, rPlanet = 215, rCusp = 168;
+  let svg = `<svg viewBox="0 0 600 600" role="img" aria-label="Astrology chart wheel">
+    <circle cx="${cx}" cy="${cy}" r="${rOuter}" fill="#0d0d22" stroke="#3a3a7a" stroke-width="2"/>
+    <circle cx="${cx}" cy="${cy}" r="${rInner}" fill="#080818" stroke="#2d2d5f" stroke-width="1.5"/>
+    <circle cx="${cx}" cy="${cy}" r="${rCusp}" fill="none" stroke="#1a1a35" stroke-width="1"/>`;
+
+  for (let i = 0; i < 12; i++) {
+    const lon = signIndex(ascLon) * 30 + i * 30;
+    const angle = rev(270 - (lon - ascLon));
+    const p1 = polar(cx, cy, rInner, angle);
+    const p2 = polar(cx, cy, rOuter, angle);
+    svg += `<line x1="${p1.x.toFixed(1)}" y1="${p1.y.toFixed(1)}" x2="${p2.x.toFixed(1)}" y2="${p2.y.toFixed(1)}" stroke="#2d2d5f" stroke-width="1"/>`;
+    const label = polar(cx, cy, 238, angle - 15);
+    const sign = SIGNS[signIndex(lon)].split(" ")[0];
+    svg += `<text x="${label.x.toFixed(1)}" y="${label.y.toFixed(1)}" text-anchor="middle" dominant-baseline="middle" font-size="22" fill="#ffd966">${sign}</text>`;
+  }
+
+  if (cusps && cusps.length >= 12) {
+    for (let i = 0; i < 12; i++) {
+      const angle = rev(270 - (cusps[i] - ascLon));
+      const p1 = polar(cx, cy, rCusp, angle);
+      const p2 = polar(cx, cy, rInner, angle);
+      svg += `<line x1="${p1.x.toFixed(1)}" y1="${p1.y.toFixed(1)}" x2="${p2.x.toFixed(1)}" y2="${p2.y.toFixed(1)}" stroke="#4a4a8a" stroke-width="0.8" stroke-dasharray="3,3"/>`;
+      const numPt = polar(cx, cy, rCusp - 12, angle - 8);
+      svg += `<text x="${numPt.x.toFixed(1)}" y="${numPt.y.toFixed(1)}" text-anchor="middle" dominant-baseline="middle" font-size="9" fill="#6060a0">${i+1}</text>`;
+    }
+  }
+
+  const skipAngles = ["Ascendant","MC","Vertex"];
+  const plotPlanets = results.filter(p => !skipAngles.includes(p.name));
+  const placedAngles = [];
+  plotPlanets.forEach((p) => {
+    let angle = rev(270 - (p.lon - ascLon));
+    let r = rPlanet;
+    for (const placed of placedAngles) {
+      if (Math.abs(angle - placed.angle) < 14) { r -= 20; break; }
+    }
+    placedAngles.push({angle, r});
+    const pt = polar(cx, cy, r, angle);
+    const glyph = GLYPHS[p.name] || p.name[0];
+    const color = p.name === "Chiron" ? "#67e8f9" : p.name === "Lilith (Mean)" ? "#f472b6" : "#e0e0ff";
+    svg += `<text x="${pt.x.toFixed(1)}" y="${pt.y.toFixed(1)}" text-anchor="middle" dominant-baseline="middle" font-size="17" fill="${color}">${glyph}</text>`;
+    const tickOuter = polar(cx, cy, rInner + 4, angle);
+    const tickInner = polar(cx, cy, rInner - 4, angle);
+    svg += `<line x1="${tickOuter.x.toFixed(1)}" y1="${tickOuter.y.toFixed(1)}" x2="${tickInner.x.toFixed(1)}" y2="${tickInner.y.toFixed(1)}" stroke="#5a5a9a" stroke-width="1"/>`;
+  });
+
+  const ascAngle = 270;
+  const ascPt = polar(cx, cy, rOuter + 6, ascAngle);
+  svg += `<text x="${ascPt.x.toFixed(1)}" y="${ascPt.y.toFixed(1)}" text-anchor="middle" dominant-baseline="middle" font-size="13" fill="#ffd966" font-weight="bold">ASC</text>`;
+  const ascResult = results.find(p => p.name === "Ascendant");
+  if (ascResult) {
+    const ascDeg = degreeDms(ascResult.lon);
+    const ascDegPt = polar(cx, cy, rOuter - 14, ascAngle + 8);
+    svg += `<text x="${ascDegPt.x.toFixed(1)}" y="${ascDegPt.y.toFixed(1)}" text-anchor="middle" dominant-baseline="middle" font-size="8" fill="#aaa098">${ascDeg}</text>`;
+  }
+  const mcResult = results.find(p => p.name === "MC");
+  if (mcResult) {
+    const mcAngle = rev(270 - (mcResult.lon - ascLon));
+    const mcPt = polar(cx, cy, rOuter + 6, mcAngle);
+    svg += `<text x="${mcPt.x.toFixed(1)}" y="${mcPt.y.toFixed(1)}" text-anchor="middle" dominant-baseline="middle" font-size="13" fill="#ffd966" font-weight="bold">MC</text>`;
+    const p1mc = polar(cx, cy, rInner, mcAngle); const p2mc = polar(cx, cy, rOuter, mcAngle);
+    svg += `<line x1="${p1mc.x.toFixed(1)}" y1="${p1mc.y.toFixed(1)}" x2="${p2mc.x.toFixed(1)}" y2="${p2mc.y.toFixed(1)}" stroke="#ffd966" stroke-width="1.5" stroke-dasharray="5,3"/>`;
+  }
+  const vtxResult = results.find(p => p.name === "Vertex");
+  if (vtxResult) {
+    const vtxAngle = rev(270 - (vtxResult.lon - ascLon));
+    const vtxPt = polar(cx, cy, rInner - 18, vtxAngle);
+    svg += `<text x="${vtxPt.x.toFixed(1)}" y="${vtxPt.y.toFixed(1)}" text-anchor="middle" dominant-baseline="middle" font-size="11" fill="#c084fc">Vx</text>`;
+  }
+  svg += `</svg>`;
+  document.getElementById(tid).innerHTML = svg;
+}
+
+function renderWheelInto(results, ascLon, cusps, targetId) {
+  renderWheel(results, ascLon, cusps, targetId);
+}
+
+async function calculateSolarReturn() {
+  const dateStr = document.getElementById("date").value;
+  const timeStr = document.getElementById("time").value;
+  const birthTz = parseFloat(document.getElementById("tz").value);
+  const birthLat = parseFloat(document.getElementById("lat").value);
+  const birthLon = parseFloat(document.getElementById("lon").value);
+  const srYear = parseInt(document.getElementById("solarYear").value, 10);
+  const srLat = parseFloat(document.getElementById("solarLat").value);
+  const srLon = parseFloat(document.getElementById("solarLon").value);
+  const srTzBase = parseFloat(document.getElementById("solarTz").value);
+  const zodiac = document.getElementById("zodiac").value;
+  const system = document.getElementById("houseSystem").value;
+
+  if (!dateStr || !timeStr || isNaN(birthTz) || isNaN(birthLat) || isNaN(birthLon) || isNaN(srYear) || isNaN(srLat) || isNaN(srLon) || isNaN(srTzBase)) {
+    alert("Please enter valid natal and Solar Return inputs.");
+    return;
+  }
+
+  try {
+    showLoading("Calculating Solar Return…");
+    const natal = await buildSwissChart(dateStr, timeStr, birthTz, birthLat, birthLon, zodiac, system);
+    const natalSun = natal.results.find(p => p.name === "Sun");
+    const [birthYear, birthMonth, birthDay] = dateStr.split("-").map(Number);
+    const srJd = await findSolarReturnJD(natalSun.lon, srYear, birthMonth, birthDay, timeStr, birthTz, zodiac);
+    const srChart = await buildSwissChartFromJD(srJd, srLat, srLon, zodiac, system, "Swiss Ephemeris WASM - Solar Return");
+    const srSun = srChart.results.find(p => p.name === "Sun");
+    const exactDiffArcSec = angularDifference(srSun.lon, natalSun.lon) * 3600;
+
+    let html = "";
+    srChart.results.forEach(p => {
+      let h;
+      if (p.name === "MC") {
+        h = "MC";
+      } else if (system === "placidus" && srChart.cusps && srChart.cusps.length >= 12) {
+        h = "House " + (placidusHouseFromCusps(p.lon, srChart.cusps) || houseOf(p.lon, srChart.asc, "equal"));
+      } else {
+        h = "House " + houseOf(p.lon, srChart.asc, system === "whole" ? "whole" : "equal");
+      }
+      html += `
+        <tr class="${p.special}">
+          <td><strong>${p.name}</strong></td>
+          <td>${signText(p.lon)}</td>
+          <td>${degreeText(p.lon)}</td>
+          <td>${degreeDms(p.lon)}</td>
+          <td><span class="house-badge">${h}</span></td>
+          <td>${p.motion}</td>
+        </tr>`;
+    });
+
+    
+    const selectedSolarPlaceObj = BIRTH_PLACES[Number(document.getElementById("solarPlace").value)];
+    const selectedSolarPlace = selectedSolarPlaceObj?.name || "Solar Return manual location";
+    const houseLabel = system === "placidus" ? "Placidus" : (system === "whole" ? "Whole Sign" : "Equal");
+    const utcText = srChart.utcDate.toISOString().replace("T", " ").replace(".000Z", " UTC");
+    const tzInfo = effectiveSolarTimezone(selectedSolarPlaceObj, srChart.utcDate, srTzBase);
+    const srTz = tzInfo.tz;
+    const localText = formatLocalFromUtc(srChart.utcDate, srTz);
+
+    document.getElementById("solar-summary").innerHTML =
+      `` +
+      `<strong>Solar Return Year:</strong> ${srYear} &nbsp; | &nbsp; ` +
+      `<strong>Solar Return Location:</strong> ${selectedSolarPlace} &nbsp; | &nbsp; ` +
+      `<strong>Exact Return Local:</strong> ${localText} (UTC ${srTz >= 0 ? "+" : ""}${srTz}${tzInfo.dstApplied ? ", DST" : ""}) &nbsp; | &nbsp; ` +
+      `<strong>Exact Return UTC:</strong> ${utcText}<br>` +
+      `<strong>Natal Sun:</strong> ${signNameFromLon(natalSun.lon)} ${degreeDms(natalSun.lon)} &nbsp; | &nbsp; ` +
+      `<strong>SR Sun:</strong> ${signNameFromLon(srSun.lon)} ${degreeDms(srSun.lon)} &nbsp; | &nbsp; ` +
+      `<strong>Sun Match Error:</strong> ${exactDiffArcSec.toFixed(2)} arcsec &nbsp; | &nbsp; ` +
+      `<strong>SR ASC:</strong> ${degreeDms(srChart.asc)} ${signNameFromLon(srChart.asc)} &nbsp; | &nbsp; ` +
+      `<strong>SR MC:</strong> ${degreeDms(srChart.mc)} ${signNameFromLon(srChart.mc)} &nbsp; | &nbsp; ` +
+      `<strong>House:</strong> ${houseLabel} &nbsp; | &nbsp; ` +
+      `<strong>Zodiac:</strong> ${zodiac === "tropical" ? "Tropical" : "Sidereal Lahiri"}`;
+
+    document.getElementById("solar-audit").innerHTML = `
+      <div><strong>Solar Return engine</strong><br>Swiss Ephemeris WASM only<br><span class="small">${swissLoadMessage}</span></div>
+      <div><strong>Search target</strong><br>Sun returns to natal longitude: ${degreeDms(natalSun.lon)} ${signNameFromLon(natalSun.lon)}</div>
+      <div><strong>Return UTC</strong><br>${utcText}</div>
+      <div><strong>Return local time</strong><br>${localText}, UTC offset ${srTz >= 0 ? "+" : ""}${srTz}${tzInfo.dstApplied ? " (DST applied)" : ""}</div>
+      <div><strong>Timezone mode</strong><br>${document.getElementById("solarAutoDst")?.value === "auto" ? "Auto DST for Australian cities" : "Manual offset only"}</div>
+      <div><strong>Julian Date</strong><br>${srChart.jd.toFixed(8)}</div>
+      <div><strong>Accuracy check</strong><br><span class="ok">Sun match error ${exactDiffArcSec.toFixed(2)} arcsec</span></div>`;
+
+    document.getElementById("solar-planet-table").innerHTML = html;
+    document.getElementById("solar-results").style.display = "block";
+    renderWheelInto(srChart.results, srChart.asc, srChart.cusps, "solar-wheel");
+    renderAspectsInto(srChart.results, "solar-aspects");
+  } catch (err) {
+    console.error(err);
+    alert("Solar Return calculation failed: " + (err?.message || err));
+  } finally {
+    hideLoading();
+  }
+}
+
+
+function daysBetweenUtc(a, b) { return (b.getTime() - a.getTime()) / 86400000; }
+function dateInputToUtcNoon(dateStr) { const [y,m,d] = dateStr.split("-").map(Number); return new Date(Date.UTC(y, m-1, d, 12, 0, 0)); }
+function yearsElapsedByMeanSolarYear(birthUtc, targetUtc) { return daysBetweenUtc(birthUtc, targetUtc) / 365.2422; }
+function progressedJdFromSecondaryProgression(birthUtc, birthJd, targetDateStr) {
+  const targetUtcNoon = dateInputToUtcNoon(targetDateStr);
+  const ageYears = yearsElapsedByMeanSolarYear(birthUtc, targetUtcNoon);
+  return { progressedJd: birthJd + ageYears, ageYears, targetUtcNoon };
+}
+function movementText(progressedLon, natalLon) {
+  const delta = signedLongitudeDelta(progressedLon, natalLon);
+  return `${Math.abs(delta).toFixed(2)}° ${delta >= 0 ? "forward" : "backward"}`;
+}
+function progressedAspectBetween(progressedLon, natalLon, maxOrb) {
+  let diff = Math.abs(rev(progressedLon - natalLon)); if (diff > 180) diff = 360 - diff;
+  const aspects = [{name:"Conjunction", angle:0, glyph:"☌"},{name:"Sextile", angle:60, glyph:"⚹"},{name:"Square", angle:90, glyph:"□"},{name:"Trine", angle:120, glyph:"△"},{name:"Opposition", angle:180, glyph:"☍"}];
+  for (const asp of aspects) { const orb = Math.abs(diff - asp.angle); if (orb <= maxOrb) return {...asp, orb}; }
+  return null;
+}
+function renderProgressedActivations(natalResults, progressedResults, maxOrb) {
+  const natalPlanets = natalResults.filter(p => !["Ascendant","MC"].includes(p.name));
+  const progressedPlanets = progressedResults.filter(p => !["Ascendant","MC"].includes(p.name));
+  const found = [];
+  for (const prog of progressedPlanets) for (const nat of natalPlanets) {
+    const asp = progressedAspectBetween(prog.lon, nat.lon, maxOrb);
+    if (asp) found.push({ progressed:prog.name, natal:nat.name, ...asp });
+  }
+  found.sort((a,b) => a.orb - b.orb);
+  document.getElementById("progressed-aspects").innerHTML = found.length
+    ? found.map(x => `<div class="aspect-card"><strong>Progressed ${x.progressed} ${x.glyph} Natal ${x.natal}</strong><br>${x.name}, orb ${x.orb.toFixed(2)}°</div>`).join("")
+    : `<div class="note">No progressed-to-natal major aspects found within ${maxOrb}° orb.</div>`;
+}
+
+function localDateStringForInput(dateObj) {
+  const y = dateObj.getFullYear();
+  const m = String(dateObj.getMonth() + 1).padStart(2, "0");
+  const d = String(dateObj.getDate()).padStart(2, "0");
+  return `${y}-${m}-${d}`;
+}
+
+function localTimeStringForInput(dateObj) {
+  const hh = String(dateObj.getHours()).padStart(2, "0");
+  const mm = String(dateObj.getMinutes()).padStart(2, "0");
+  return `${hh}:${mm}`;
+}
+
+function setProgressedDateToday() {
+  const now = new Date();
+  document.getElementById("progressedTargetDate").value = localDateStringForInput(now);
+  calculateProgressedComparison();
+}
+
+function setTransitDateTimeNow() {
+  const now = new Date();
+  document.getElementById("transitDate").value = localDateStringForInput(now);
+  document.getElementById("transitTime").value = localTimeStringForInput(now);
+  calculateTransitComparison();
+}
+
+function setTransitDateTodayNoon() {
+  const now = new Date();
+  document.getElementById("transitDate").value = localDateStringForInput(now);
+  document.getElementById("transitTime").value = "12:00";
+  calculateTransitComparison();
+}
+
+function renderBiWheel(natalResults, natalAsc, natalCusps, outerResults, targetId, outerLabel="Transit") {
+  const target = document.getElementById(targetId);
+  if (!target) return;
+  const cx = 300, cy = 300;
+  const rOuter = 270, rOuterInner = 226, rInnerOuter = 210, rInner = 160, rCusp = 145;
+  const natalPlanetR = 186, outerPlanetR = 248;
+  let svg = `<svg viewBox="0 0 600 600" role="img" aria-label="Natal and ${outerLabel} bi-wheel chart">`;
+  svg += `<circle cx="${cx}" cy="${cy}" r="${rOuter}" fill="#0d0d22" stroke="#3a3a7a" stroke-width="2"/>`;
+  svg += `<circle cx="${cx}" cy="${cy}" r="${rOuterInner}" fill="none" stroke="#2d2d5f" stroke-width="1"/>`;
+  svg += `<circle cx="${cx}" cy="${cy}" r="${rInnerOuter}" fill="#10102a" stroke="#3a3a7a" stroke-width="1.5"/>`;
+  svg += `<circle cx="${cx}" cy="${cy}" r="${rInner}" fill="#0a0a15" stroke="#2d2d5f" stroke-width="1"/>`;
+  svg += `<circle cx="${cx}" cy="${cy}" r="${rCusp}" fill="none" stroke="#1a1a30" stroke-width="0.7"/>`;
+
+  for (let i = 0; i < 12; i++) {
+    const lon = signIndex(natalAsc) * 30 + i * 30;
+    const angle = rev(270 - (lon - natalAsc));
+    const p1 = polar(cx, cy, rInner, angle);
+    const p2 = polar(cx, cy, rOuter, angle);
+    svg += `<line x1="${p1.x.toFixed(1)}" y1="${p1.y.toFixed(1)}" x2="${p2.x.toFixed(1)}" y2="${p2.y.toFixed(1)}" stroke="#2d2d5f" stroke-width="1"/>`;
+    const label = polar(cx, cy, 290, angle - 15);
+    const sign = SIGNS[signIndex(lon)].split(" ")[0];
+    svg += `<text x="${label.x.toFixed(1)}" y="${label.y.toFixed(1)}" text-anchor="middle" dominant-baseline="middle" font-size="20" fill="#ffd966">${sign}</text>`;
+  }
+
+  if (natalCusps && natalCusps.length >= 12) {
+    for (let i = 0; i < 12; i++) {
+      const angle = rev(270 - (natalCusps[i] - natalAsc));
+      const p1 = polar(cx, cy, rCusp, angle);
+      const p2 = polar(cx, cy, rInner, angle);
+      svg += `<line x1="${p1.x.toFixed(1)}" y1="${p1.y.toFixed(1)}" x2="${p2.x.toFixed(1)}" y2="${p2.y.toFixed(1)}" stroke="#3a3a7a" stroke-width="0.7" stroke-dasharray="2,3"/>`;
+    }
+  }
+
+  const skipAngles = ["Ascendant","MC","Vertex"];
+  const natalPlanets = natalResults.filter(p => !skipAngles.includes(p.name));
+  const natalPlaced = [];
+  natalPlanets.forEach((p) => {
+    let angle = rev(270 - (p.lon - natalAsc));
+    let r = natalPlanetR;
+    for (const placed of natalPlaced) { if (Math.abs(angle - placed.angle) < 13) { r -= 18; break; } }
+    natalPlaced.push({angle, r, lon:p.lon});
+    const pt = polar(cx, cy, r, angle);
+    svg += `<text x="${pt.x.toFixed(1)}" y="${pt.y.toFixed(1)}" text-anchor="middle" dominant-baseline="middle" font-size="15" fill="#e0e0ff">${GLYPHS[p.name] || p.name[0]}</text>`;
+  });
+
+  const outerPlanets = outerResults.filter(p => !skipAngles.includes(p.name));
+  const outerPlaced = [];
+  outerPlanets.forEach((p) => {
+    let angle = rev(270 - (p.lon - natalAsc));
+    let r = outerPlanetR;
+    for (const placed of outerPlaced) { if (Math.abs(angle - placed.angle) < 13) { r -= 18; break; } }
+    outerPlaced.push({angle, r, lon:p.lon});
+    const pt = polar(cx, cy, r, angle);
+    svg += `<text x="${pt.x.toFixed(1)}" y="${pt.y.toFixed(1)}" text-anchor="middle" dominant-baseline="middle" font-size="15" fill="#64d68a">${GLYPHS[p.name] || p.name[0]}</text>`;
+  });
+
+  const ASPECT_COLORS = { "Conjunction":"#9a8cff","Trine":"#64d68a","Sextile":"#67e8f9","Square":"#ffb86c","Opposition":"#f472b6" };
+  for (const op of outerPlanets) {
+    for (const np of natalPlanets) {
+      const asp = aspectBetween(op.lon, np.lon, false);
+      if (asp && ASPECT_COLORS[asp.name] && asp.orb <= 4) {
+        const angleO = rev(270 - (op.lon - natalAsc));
+        const angleN = rev(270 - (np.lon - natalAsc));
+        const ptO = polar(cx, cy, rInnerOuter - 2, angleO);
+        const ptN = polar(cx, cy, rInner + 2, angleN);
+        svg += `<line x1="${ptO.x.toFixed(1)}" y1="${ptO.y.toFixed(1)}" x2="${ptN.x.toFixed(1)}" y2="${ptN.y.toFixed(1)}" stroke="${ASPECT_COLORS[asp.name]}" stroke-width="0.9" stroke-opacity="0.45"/>`;
+      }
+    }
+  }
+
+  const ascPt = polar(cx, cy, 282, 270);
+  svg += `<text x="${ascPt.x.toFixed(1)}" y="${ascPt.y.toFixed(1)}" text-anchor="middle" dominant-baseline="middle" font-size="13" fill="#ffd966">ASC</text>`;
+  svg += `<text x="300" y="292" text-anchor="middle" font-size="12" fill="#e0e0ff">Inner: Natal</text>`;
+  svg += `<text x="300" y="310" text-anchor="middle" font-size="12" fill="#64d68a">Outer: ${outerLabel}</text>`;
+  svg += `</svg>`;
+  target.innerHTML = svg;
+}
+
+async function calculateProgressedComparison() {
+  const dateStr = document.getElementById("date").value;
+  const timeStr = document.getElementById("time").value;
+  const birthTz = parseFloat(document.getElementById("tz").value);
+  const birthLat = parseFloat(document.getElementById("lat").value);
+  const birthLon = parseFloat(document.getElementById("lon").value);
+  const targetDateStr = document.getElementById("progressedTargetDate").value;
+  const maxOrb = parseFloat(document.getElementById("progressedOrb").value || "1");
+  const zodiac = document.getElementById("zodiac").value;
+  const system = document.getElementById("houseSystem").value;
+  if (!dateStr || !timeStr || !targetDateStr || isNaN(birthTz) || isNaN(birthLat) || isNaN(birthLon) || isNaN(maxOrb)) { alert("Please enter valid natal and progressed chart inputs."); return; }
+  showLoading("Calculating progressions…");
+  try {
+    const natal = await buildSwissChart(dateStr, timeStr, birthTz, birthLat, birthLon, zodiac, system);
+    const birthUtc = dateFromLocal(dateStr, timeStr, birthTz);
+    const birthJd = birthUtc.getTime() / 86400000 + 2440587.5;
+    const progression = progressedJdFromSecondaryProgression(birthUtc, birthJd, targetDateStr);
+    const progressed = await buildSwissChartFromJD(progression.progressedJd, birthLat, birthLon, zodiac, system, "Swiss Ephemeris WASM - Secondary Progression");
+    const natalByName = Object.fromEntries(natal.results.map(p => [p.name, p]));
+    const rows = progressed.results.filter(p => !["Ascendant","MC"].includes(p.name)).map(p => {
+      const n = natalByName[p.name];
+      return `<tr><td><strong>${p.name}</strong></td><td>${n ? `${signNameFromLon(n.lon)} ${degreeDms(n.lon)}` : "-"}</td><td>${signNameFromLon(p.lon)} ${degreeDms(p.lon)}</td><td>${n ? movementText(p.lon, n.lon) : "-"}</td><td>${p.motion}</td></tr>`;
+    }).join("");
+    
+    const progressedMoon = progressed.results.find(p => p.name === "Moon");
+    const natalMoon = natal.results.find(p => p.name === "Moon");
+    const progressedSun = progressed.results.find(p => p.name === "Sun");
+    const natalSun = natal.results.find(p => p.name === "Sun");
+    const progressedUtcText = progressed.utcDate.toISOString().replace("T", " ").replace(".000Z", " UTC");
+    document.getElementById("progressed-summary").innerHTML = `<strong>Target Date:</strong> ${targetDateStr} &nbsp; | &nbsp; <strong>Age Used:</strong> ${progression.ageYears.toFixed(3)} years &nbsp; | &nbsp; <strong>Progressed Date:</strong> ${progressedUtcText}<br><strong>Progressed Sun:</strong> ${signNameFromLon(progressedSun.lon)} ${degreeDms(progressedSun.lon)} (Natal ${signNameFromLon(natalSun.lon)} ${degreeDms(natalSun.lon)}) &nbsp; | &nbsp; <strong>Progressed Moon:</strong> ${signNameFromLon(progressedMoon.lon)} ${degreeDms(progressedMoon.lon)} (Natal ${signNameFromLon(natalMoon.lon)} ${degreeDms(natalMoon.lon)})`;
+    document.getElementById("progressed-audit").innerHTML = `<div><strong>Progression method</strong><br>Secondary progression: 1 day after birth = 1 year of life</div><div><strong>Natal UTC</strong><br>${birthUtc.toISOString().replace("T", " ").replace(".000Z", " UTC")}</div><div><strong>Progressed calculation date</strong><br>${progressedUtcText}</div><div><strong>Mean solar-year age</strong><br>${progression.ageYears.toFixed(6)} years</div><div><strong>Comparison orb</strong><br>${maxOrb}° for progressed-to-natal activations</div><div><strong>Zodiac</strong><br>${zodiac === "tropical" ? "Tropical" : "Sidereal Lahiri"}</div>`;
+    document.getElementById("progressed-planet-table").innerHTML = rows;
+    document.getElementById("progressed-results").style.display = "block";
+    renderProgressedActivations(natal.results, progressed.results, maxOrb);
+  } catch (err) { console.error(err); alert("Progressed chart calculation failed: " + (err?.message || err)); }
+  finally { hideLoading(); }
+}
+
+
+function populateTransitPlaces() {
+  const select = document.getElementById("transitPlace");
+  if (!select) return;
+  select.innerHTML = BIRTH_PLACES.map((p, idx) => `<option value="${idx}">${p.name}</option>`).join("");
+  const melbourneIndex = BIRTH_PLACES.findIndex(p => p.name && p.name.includes("Melbourne"));
+  if (melbourneIndex >= 0) select.value = String(melbourneIndex);
+}
+
+function applyTransitPlace() {
+  const idx = Number(document.getElementById("transitPlace").value);
+  const place = BIRTH_PLACES[idx];
+  if (!place) return;
+  if (place.lat !== null && place.lon !== null) {
+    document.getElementById("transitLat").value = place.lat.toFixed(5);
+    document.getElementById("transitLon").value = place.lon.toFixed(5);
+    document.getElementById("transitTz").value = place.tz;
+    const dstNote = place.auDst ? " Standard UTC offset shown; Auto DST can add +1 hour during Australian daylight saving." : "";
+    document.getElementById("transitPlaceNote").innerHTML = `${place.name}: ${coordLabel(place.lat, place.lon)}, standard UTC offset ${place.tz >= 0 ? "+" : ""}${place.tz}.${dstNote}`;
+  } else {
+    document.getElementById("transitTz").value = place.tz;
+    document.getElementById("transitPlaceNote").innerHTML = `Manual Transit location: type latitude, longitude and timezone offset. Location affects transit ASC/MC and houses, not planetary longitudes.`;
+  }
+}
+
+function useBirthPlaceForTransit() {
+  document.getElementById("transitLat").value = document.getElementById("lat").value;
+  document.getElementById("transitLon").value = document.getElementById("lon").value;
+  document.getElementById("transitTz").value = document.getElementById("tz").value;
+  document.getElementById("transitPlaceNote").innerHTML = "Transit location copied from natal birthplace. This is useful when you want a birthplace-based transit chart.";
+}
+
+function effectiveTransitTimezone(place, utcDate, baseTz) {
+  const mode = document.getElementById("transitAutoDst")?.value || "auto";
+  if (mode !== "auto" || !place || !place.auDst) return { tz:baseTz, dstApplied:false };
+  const active = isAustralianDstByUtc(utcDate);
+  return { tz: active ? baseTz + 1 : baseTz, dstApplied:active };
+}
+
+function renderTransitActivations(natalResults, transitResults, maxOrb) {
+  const natalPlanets = natalResults.filter(p => !["Ascendant","MC"].includes(p.name));
+  const transitPlanets = transitResults.filter(p => !["Ascendant","MC"].includes(p.name));
+  const found = [];
+  for (const trans of transitPlanets) for (const nat of natalPlanets) {
+    const asp = progressedAspectBetween(trans.lon, nat.lon, maxOrb);
+    if (asp) found.push({ transit:trans.name, natal:nat.name, ...asp });
+  }
+  found.sort((a,b) => a.orb - b.orb);
+  document.getElementById("transit-aspects").innerHTML = found.length
+    ? found.map(x => `<div class="aspect-card"><strong>Transit ${x.transit} ${x.glyph} Natal ${x.natal}</strong><br>${x.name}, orb ${x.orb.toFixed(2)}°</div>`).join("")
+    : `<div class="note">No transit-to-natal major aspects found within ${maxOrb}° orb.</div>`;
+}
+
+async function calculateTransitComparison() {
+  const dateStr = document.getElementById("date").value;
+  const timeStr = document.getElementById("time").value;
+  const birthTz = parseFloat(document.getElementById("tz").value);
+  const birthLat = parseFloat(document.getElementById("lat").value);
+  const birthLon = parseFloat(document.getElementById("lon").value);
+  const transitDate = document.getElementById("transitDate").value;
+  const transitTime = document.getElementById("transitTime").value;
+  const transitBaseTz = parseFloat(document.getElementById("transitTz").value);
+  const transitLat = parseFloat(document.getElementById("transitLat").value);
+  const transitLon = parseFloat(document.getElementById("transitLon").value);
+  const maxOrb = parseFloat(document.getElementById("transitOrb").value || "2");
+  const zodiac = document.getElementById("zodiac").value;
+  const system = document.getElementById("houseSystem").value;
+  if (!dateStr || !timeStr || !transitDate || !transitTime || isNaN(birthTz) || isNaN(birthLat) || isNaN(birthLon) || isNaN(transitBaseTz) || isNaN(transitLat) || isNaN(transitLon) || isNaN(maxOrb)) {
+    alert("Please enter valid natal and transit inputs.");
+    return;
+  }
+
+  const tzWarnEl = document.getElementById("transit-tz-warning");
+  const tzDiff = Math.abs(transitBaseTz - birthTz);
+  if (tzDiff > 0.01) {
+    document.getElementById("warn-transit-tz").textContent = (transitBaseTz >= 0 ? "+" : "") + transitBaseTz;
+    document.getElementById("warn-natal-tz").textContent = (birthTz >= 0 ? "+" : "") + birthTz;
+    tzWarnEl.classList.add("visible");
+  } else {
+    tzWarnEl.classList.remove("visible");
+  }
+
+  showLoading("Calculating transit chart…");
+  try {
+    const selectedTransitPlaceObj = BIRTH_PLACES[Number(document.getElementById("transitPlace").value)];
+    const roughUtc = dateFromLocal(transitDate, transitTime, transitBaseTz);
+    const tzInfo = effectiveTransitTimezone(selectedTransitPlaceObj, roughUtc, transitBaseTz);
+    const natal = await buildSwissChart(dateStr, timeStr, birthTz, birthLat, birthLon, zodiac, system);
+    const transit = await buildSwissChart(transitDate, transitTime, tzInfo.tz, transitLat, transitLon, zodiac, system);
+    const natalByName = Object.fromEntries(natal.results.map(p => [p.name, p]));
+    const rows = transit.results.filter(p => !["Ascendant","MC"].includes(p.name)).map(p => {
+      const n = natalByName[p.name];
+      let h = "-";
+      if (system === "placidus" && transit.cusps && transit.cusps.length >= 12) h = "House " + (placidusHouseFromCusps(p.lon, transit.cusps) || houseOf(p.lon, transit.asc, "equal"));
+      else h = "House " + houseOf(p.lon, transit.asc, system === "whole" ? "whole" : "equal");
+      return `<tr><td><strong>${p.name}</strong></td><td>${n ? `${signNameFromLon(n.lon)} ${degreeDms(n.lon)}` : "-"}</td><td>${signNameFromLon(p.lon)} ${degreeDms(p.lon)}</td><td><span class="house-badge">${h}</span></td><td>${p.motion}</td></tr>`;
+    }).join("");
+    
+    const placeName = selectedTransitPlaceObj?.name || "Manual transit location";
+    const localText = `${transitDate} ${transitTime} UTC ${tzInfo.tz >= 0 ? "+" : ""}${tzInfo.tz}`;
+    document.getElementById("transit-summary").innerHTML =
+      `<strong>Transit Date/Time:</strong> ${localText} &nbsp; | &nbsp; <strong>Location:</strong> ${placeName}<br>` +
+      `<strong>Transit ASC:</strong> ${signNameFromLon(transit.asc)} ${degreeDms(transit.asc)} &nbsp; | &nbsp; <strong>Transit MC:</strong> ${signNameFromLon(transit.mc)} ${degreeDms(transit.mc)} &nbsp; | &nbsp; <strong>Comparison Orb:</strong> ${maxOrb}°`;
+    document.getElementById("transit-audit").innerHTML =
+      `<div><strong>Transit engine</strong><br>Swiss Ephemeris WASM only<br><span class="small">${swissLoadMessage}</span></div>` +
+      `<div><strong>Transit UTC</strong><br>${transit.utcDate.toISOString().replace("T", " ").replace(".000Z", " UTC")}</div>` +
+      `<div><strong>Transit location</strong><br>${coordLabel(transitLat, transitLon)}</div>` +
+      `<div><strong>Timezone / DST</strong><br>Effective UTC offset ${tzInfo.tz >= 0 ? "+" : ""}${tzInfo.tz}${tzInfo.dstApplied ? " (AU DST applied)" : ""}</div>` +
+      `<div><strong>Zodiac</strong><br>${zodiac === "tropical" ? "Tropical" : "Sidereal Lahiri"}</div>` +
+      `<div><strong>House system</strong><br>${system === "placidus" ? "Placidus" : (system === "whole" ? "Whole Sign" : "Equal")}</div>`;
+    document.getElementById("transit-planet-table").innerHTML = rows;
+    document.getElementById("transit-results").style.display = "block";
+    renderWheelInto(transit.results, transit.asc, transit.cusps, "transit-wheel");
+    renderBiWheel(natal.results, natal.asc, natal.cusps, transit.results, "transit-biwheel", "Transit");
+    renderTransitActivations(natal.results, transit.results, maxOrb);
+  } catch (err) {
+    console.error(err);
+    alert("Transit chart calculation failed: " + (err?.message || err));
+  } finally {
+    hideLoading();
+  }
+}
+
+function formatPositionForExport(p) {
+  if (!p) return null;
+  return {
+    name: p.name,
+    sign: signNameFromLon(p.lon),
+    degree_decimal_in_sign: Number(degreeDec(p.lon).toFixed(6)),
+    dms: degreeDms(p.lon),
+    absolute_longitude: Number(rev(p.lon).toFixed(6)),
+    motion: p.motion || ""
+  };
+}
+
+function chartResultsForExport(chart, includeCusps=false) {
+  if (!chart) return null;
+  const planets = {};
+  chart.results.forEach(p => { planets[p.name] = formatPositionForExport(p); });
+  const output = {
+    engine: chart.engineName,
+    julian_date: Number(chart.jd.toFixed(8)),
+    utc: chart.utcDate.toISOString(),
+    ascendant: formatPositionForExport(chart.results.find(p => p.name === "Ascendant")),
+    mc: formatPositionForExport(chart.results.find(p => p.name === "MC")),
+    planets
+  };
+  if (includeCusps && chart.cusps && chart.cusps.length) {
+    output.house_cusps = chart.cusps.map((c, idx) => ({ house: idx + 1, sign: signNameFromLon(c), dms: degreeDms(c), absolute_longitude: Number(rev(c).toFixed(6)) }));
+  }
+  return output;
+}
+
+function majorAspectsForExport(results, labelA="", labelB="") {
+  const planets = results.filter(p => !["Ascendant","MC","Vertex"].includes(p.name));
+  const found = [];
+  for (let i = 0; i < planets.length; i++) {
+    for (let j = i + 1; j < planets.length; j++) {
+      const asp = aspectBetween(planets[i].lon, planets[j].lon, false);
+      if (asp) found.push({
+        body_a: `${labelA}${planets[i].name}`,
+        body_b: `${labelB}${planets[j].name}`,
+        aspect: asp.name,
+        glyph: asp.glyph,
+        orb_degrees: Number(asp.orb.toFixed(4))
+      });
+    }
+  }
+  return found.sort((a,b) => a.orb_degrees - b.orb_degrees);
+}
+
+function crossAspectsForExport(innerResults, outerResults, maxOrb, outerLabel, innerLabel) {
+  const inner = innerResults.filter(p => !["Ascendant","MC"].includes(p.name));
+  const outer = outerResults.filter(p => !["Ascendant","MC"].includes(p.name));
+  const found = [];
+  for (const o of outer) {
+    for (const n of inner) {
+      const asp = progressedAspectBetween(o.lon, n.lon, maxOrb);
+      if (asp) found.push({
+        outer_body: `${outerLabel} ${o.name}`,
+        natal_body: `${innerLabel} ${n.name}`,
+        aspect: asp.name,
+        glyph: asp.glyph,
+        orb_degrees: Number(asp.orb.toFixed(4))
+      });
+    }
+  }
+  return found.sort((a,b) => a.orb_degrees - b.orb_degrees);
+}
+
+function currentInputMetaForExport() {
+  const birthPlace = BIRTH_PLACES[Number(document.getElementById("birthPlace").value)]?.name || "Manual Coordinates";
+  const solarPlace = BIRTH_PLACES[Number(document.getElementById("solarPlace")?.value)]?.name || "Manual Solar Return Location";
+  const transitPlace = BIRTH_PLACES[Number(document.getElementById("transitPlace")?.value)]?.name || "Manual Transit Location";
+  return {
+    person_name: "Anonymous",
+    birth: {
+      date: document.getElementById("date").value,
+      time_local: document.getElementById("time").value,
+      timezone_utc_offset: Number(parseFloat(document.getElementById("tz").value).toFixed(2)),
+      place: birthPlace,
+      latitude: Number(parseFloat(document.getElementById("lat").value).toFixed(6)),
+      longitude: Number(parseFloat(document.getElementById("lon").value).toFixed(6))
+    },
+    settings: {
+      zodiac: document.getElementById("zodiac").value,
+      house_system: document.getElementById("houseSystem").value,
+      calculation_engine: "Swiss Ephemeris WASM preferred"
+    },
+    solar_return_input: {
+      year: Number(document.getElementById("solarYear")?.value || new Date().getFullYear()),
+      place: solarPlace,
+      latitude: Number(parseFloat(document.getElementById("solarLat")?.value || "0").toFixed(6)),
+      longitude: Number(parseFloat(document.getElementById("solarLon")?.value || "0").toFixed(6)),
+      base_timezone_utc_offset: Number(parseFloat(document.getElementById("solarTz")?.value || "0").toFixed(2)),
+      australia_dst_mode: document.getElementById("solarAutoDst")?.value || "auto"
+    },
+    progressed_input: {
+      target_date: document.getElementById("progressedTargetDate")?.value,
+      method: "Secondary progression, 1 day after birth = 1 year of life",
+      activation_orb_degrees: Number(parseFloat(document.getElementById("progressedOrb")?.value || "1").toFixed(2))
+    },
+    transit_input: {
+      date: document.getElementById("transitDate")?.value,
+      time_local: document.getElementById("transitTime")?.value,
+      place: transitPlace,
+      latitude: Number(parseFloat(document.getElementById("transitLat")?.value || "0").toFixed(6)),
+      longitude: Number(parseFloat(document.getElementById("transitLon")?.value || "0").toFixed(6)),
+      base_timezone_utc_offset: Number(parseFloat(document.getElementById("transitTz")?.value || "0").toFixed(2)),
+      australia_dst_mode: document.getElementById("transitAutoDst")?.value || "auto",
+      activation_orb_degrees: Number(parseFloat(document.getElementById("transitOrb")?.value || "2").toFixed(2))
+    }
+  };
+}
+
+async function buildAiPayload() {
+  const meta = currentInputMetaForExport();
+  const dateStr = meta.birth.date;
+  const timeStr = meta.birth.time_local;
+  const birthTz = meta.birth.timezone_utc_offset;
+  const birthLat = meta.birth.latitude;
+  const birthLon = meta.birth.longitude;
+  const zodiac = document.getElementById("zodiac").value;
+  const system = document.getElementById("houseSystem").value;
+  if (!dateStr || !timeStr || isNaN(birthTz) || isNaN(birthLat) || isNaN(birthLon)) throw new Error("Birth data is incomplete. Calculate or complete natal chart inputs first.");
+  const natal = await buildSwissChart(dateStr, timeStr, birthTz, birthLat, birthLon, zodiac, system);
+  const natalSun = natal.results.find(p => p.name === "Sun");
+  let solarReturn = null;
+  try {
+    const [, birthMonth, birthDay] = dateStr.split("-").map(Number);
+    const srPlaceObj = BIRTH_PLACES[Number(document.getElementById("solarPlace")?.value)];
+    const srJd = await findSolarReturnJD(natalSun.lon, meta.solar_return_input.year, birthMonth, birthDay, timeStr, birthTz, zodiac);
+    const srChart = await buildSwissChartFromJD(srJd, meta.solar_return_input.latitude, meta.solar_return_input.longitude, zodiac, system, "Swiss Ephemeris WASM - Solar Return");
+    const srTzInfo = effectiveSolarTimezone(srPlaceObj, srChart.utcDate, meta.solar_return_input.base_timezone_utc_offset);
+    const srSun = srChart.results.find(p => p.name === "Sun");
+    solarReturn = { input: meta.solar_return_input, exact_return_utc: srChart.utcDate.toISOString(), exact_return_local: formatLocalFromUtc(srChart.utcDate, srTzInfo.tz), effective_timezone_utc_offset: srTzInfo.tz, dst_applied: srTzInfo.dstApplied, sun_match_error_arcseconds: Number((angularDifference(srSun.lon, natalSun.lon) * 3600).toFixed(4)), chart: chartResultsForExport(srChart, true), aspects: majorAspectsForExport(srChart.results, "SR ", "SR ") };
+  } catch (err) { solarReturn = { error: err?.message || String(err) }; }
+  let progressed = null;
+  try {
+    const birthUtc = dateFromLocal(dateStr, timeStr, birthTz);
+    const birthJd = birthUtc.getTime() / 86400000 + 2440587.5;
+    const progInfo = progressedJdFromSecondaryProgression(birthUtc, birthJd, meta.progressed_input.target_date);
+    const progChart = await buildSwissChartFromJD(progInfo.progressedJd, birthLat, birthLon, zodiac, system, "Swiss Ephemeris WASM - Secondary Progression");
+    progressed = { input: meta.progressed_input, age_years_used: Number(progInfo.ageYears.toFixed(6)), progressed_calculation_utc: progChart.utcDate.toISOString(), chart: chartResultsForExport(progChart, false), progressed_to_natal_activations: crossAspectsForExport(natal.results, progChart.results, meta.progressed_input.activation_orb_degrees, "Progressed", "Natal") };
+  } catch (err) { progressed = { error: err?.message || String(err) }; }
+  let transit = null;
+  try {
+    const transitPlaceObj = BIRTH_PLACES[Number(document.getElementById("transitPlace")?.value)];
+    const roughUtc = dateFromLocal(meta.transit_input.date, meta.transit_input.time_local, meta.transit_input.base_timezone_utc_offset);
+    const tzInfo = effectiveTransitTimezone(transitPlaceObj, roughUtc, meta.transit_input.base_timezone_utc_offset);
+    const transitChart = await buildSwissChart(meta.transit_input.date, meta.transit_input.time_local, tzInfo.tz, meta.transit_input.latitude, meta.transit_input.longitude, zodiac, system);
+    transit = { input: meta.transit_input, effective_timezone_utc_offset: tzInfo.tz, dst_applied: tzInfo.dstApplied, transit_utc: transitChart.utcDate.toISOString(), chart: chartResultsForExport(transitChart, true), transit_to_natal_activations: crossAspectsForExport(natal.results, transitChart.results, meta.transit_input.activation_orb_degrees, "Transit", "Natal") };
+  } catch (err) { transit = { error: err?.message || String(err) }; }
+  return { export_version: "AstroCalc Pro AI Export v1.0", generated_at: new Date().toISOString(), purpose: "Structured astrology data export for AI interpretation. Calculation layer remains separate from AI interpretation layer.", meta, natal: { chart: chartResultsForExport(natal, true), natal_aspects: majorAspectsForExport(natal.results, "Natal ", "Natal ") }, solar_return: solarReturn, progressed, transit, interpretation_guidance: { suggested_priority_order: ["Natal chart foundations: Sun, Moon, Ascendant, MC, chart ruler and major natal aspects", "Solar Return: yearly focus, SR Ascendant, SR Moon, SR MC, planets near angles", "Secondary Progressions: progressed Moon sign/phase and progressed-to-natal activations", "Transits: slow-planet activations to natal Sun, Moon, ASC, MC, Venus, Mars and Saturn"], safety_note: "Astrology is interpretive and should not be used as medical, legal or financial certainty. Health sections should be framed as wellbeing themes only." } };
+}
+
+function buildPromptFromPayload(payload) {
+  const focus = document.getElementById("aiForecastFocus")?.value || "full";
+  const style = document.getElementById("aiReportStyle")?.value || "balanced";
+  const healthDisclaimer = document.getElementById("aiHealthDisclaimer")?.value || "yes";
+  const p = payload.meta.person_name;
+  const b = payload.meta.birth;
+
+  function fmtPlanet(obj) {
+    if (!obj) return "?";
+    return `${obj.sign} ${obj.dms}${obj.motion && obj.motion.includes("Retro") ? " ℞" : ""}`;
+  }
+
+  function natalSummary(natal) {
+    const chart = natal?.chart;
+    if (!chart || !chart.planets) return "⚠ NATAL CHART DATA MISSING — cannot generate accurate report without natal positions.";
+    const pl = chart.planets;
+    const lines = ["NATAL CHART (key bodies):"];
+    ["Sun","Moon","Mercury","Venus","Mars","Jupiter","Saturn","Uranus","Neptune","Pluto","Mean North Node","Chiron","Lilith (Mean)"].forEach(n => {
+      if (pl[n]) lines.push(`  ${n}: ${fmtPlanet(pl[n])}`);
+    });
+    if (chart.ascendant) lines.push(`  Ascendant: ${fmtPlanet(chart.ascendant)}`);
+    if (chart.mc) lines.push(`  MC: ${fmtPlanet(chart.mc)}`);
+    const topAspects = (natal.natal_aspects || []).slice(0, 12).map(a => `  ${a.body_a.replace("Natal ","")} ${a.glyph} ${a.body_b.replace("Natal ","")} (${a.aspect}, orb ${a.orb_degrees}°)`);
+    if (topAspects.length) lines.push("NATAL ASPECTS (strongest 12):", ...topAspects);
+    return lines.join("\n");
+  }
+
+  function srSummary(sr) {
+    if (!sr || sr.error) return sr?.error ? `Solar Return error: ${sr.error}` : "Solar Return not calculated.";
+    const chart = sr.chart;
+    if (!chart) return "Solar Return chart missing.";
+    const lines = [`SOLAR RETURN ${payload.meta.solar_return_input?.year || ""} @ ${payload.meta.solar_return_input?.place || ""}:`,
+      `  Return exact: ${sr.exact_return_local || sr.exact_return_utc}`,
+      `  SR ASC: ${fmtPlanet(chart.ascendant)}   SR MC: ${fmtPlanet(chart.mc)}`];
+    ["Sun","Moon","Mars","Jupiter","Saturn","Uranus"].forEach(n => {
+      if (chart.planets?.[n]) lines.push(`  SR ${n}: ${fmtPlanet(chart.planets[n])}`);
+    });
+    const topAsp = (sr.aspects || []).slice(0, 8).map(a => `  ${a.body_a.replace("SR ","")} ${a.glyph} ${a.body_b.replace("SR ","")} (${a.aspect}, orb ${a.orb_degrees}°)`);
+    if (topAsp.length) lines.push("SR Aspects:", ...topAsp);
+    return lines.join("\n");
+  }
+
+  function progSummary(prog) {
+    if (!prog || prog.error) return prog?.error ? `Progression error: ${prog.error}` : "Progressions not calculated.";
+    const chart = prog.chart;
+    const lines = [`SECONDARY PROGRESSIONS (target: ${prog.input?.target_date || "?"}):`,
+      `  Age used: ${prog.age_years_used?.toFixed(2)} years`];
+    ["Sun","Moon","Mercury","Venus","Mars"].forEach(n => {
+      if (chart?.planets?.[n]) lines.push(`  Prog ${n}: ${fmtPlanet(chart.planets[n])}`);
+    });
+    const acts = (prog.progressed_to_natal_activations || []).slice(0, 10).map(a => `  ${a.outer_body} ${a.glyph} ${a.natal_body} (${a.aspect}, orb ${a.orb_degrees}°)`);
+    if (acts.length) lines.push("Progressed activations:", ...acts);
+    return lines.join("\n");
+  }
+
+  function transitSummary(tr) {
+    if (!tr || tr.error) return tr?.error ? `Transit error: ${tr.error}` : "Transits not calculated.";
+    const lines = [`TRANSITS (${tr.input?.date || "?"} ${tr.input?.time_local || ""}):`,
+      `  Location: ${tr.input?.place || "?"}   Orb: ${tr.input?.activation_orb_degrees}°`];
+    const acts = (tr.transit_to_natal_activations || []).slice(0, 12).map(a => `  ${a.outer_body} ${a.glyph} ${a.natal_body} (${a.aspect}, orb ${a.orb_degrees}°)`);
+    if (acts.length) lines.push("Active transits:", ...acts);
+    return lines.join("\n");
+  }
+
+  const chartData = [
+    natalSummary(payload.natal),
+    srSummary(payload.solar_return),
+    progSummary(payload.progressed),
+    transitSummary(payload.transit)
+  ].join("\n\n");
+
+  return `You are an expert astrologer and a clear, practical report writer.
+
+Analyse the following astrology data for ${p}.
+
+Birth: ${b.date} ${b.time_local} local | ${b.place} | UTC ${b.timezone_utc_offset >= 0 ? "+" : ""}${b.timezone_utc_offset}
+Zodiac: ${payload.meta.settings.zodiac} | House system: ${payload.meta.settings.house_system}
+
+Report focus: ${focus}
+Report style: ${style}
+Include health disclaimer: ${healthDisclaimer}
+
+Instructions:
+1. Use the natal chart as the foundation. Lead with Sun/Moon/Ascendant/MC synthesis.
+2. Solar Return sets the theme for the year. Focus on SR Ascendant, SR Moon, SR MC, and planets near angles.
+3. Secondary Progressions reveal internal development, especially Progressed Moon sign and phase.
+4. Transits provide timing. Focus on slow planets (Saturn, Uranus, Neptune, Pluto) to natal angles and luminaries.
+5. Organise into sections: Overview · Career & Public Life · Relationships & Family · Personal Growth · Health & Wellbeing · Timing Windows · Summary.
+6. Be specific but never fatalistic. Highlight the strongest 8–12 signatures only.
+7. Health: wellbeing themes only. Suggest ordinary self-care. No diagnosis.
+
+${chartData}
+`;
+}
+
+
+
+function setAiExportOutput(text, message) { const box = document.getElementById("ai-export-box"); if (box) box.value = text; const status = document.getElementById("ai-export-status"); if (status) status.innerHTML = `<span class="status-pill">${message}</span>`; }
+
+function validateNatalInPayload(payload) {
+  const planets = payload?.natal?.chart?.planets;
+  if (!planets || !planets["Sun"] || !planets["Moon"]) {
+    throw new Error(
+      "❌ Natal chart data is missing from the export.\n\n" +
+      "This means the AI will not know your Sun, Moon, Ascendant or any natal positions — " +
+      "leading to hallucinated or inaccurate interpretations (as seen with the Aries Moon error).\n\n" +
+      "Fix: Make sure you have clicked 'Calculate Chart' for the natal chart BEFORE generating the AI export. " +
+      "Then try again."
+    );
+  }
+  const moon = planets["Moon"];
+  const asc = payload?.natal?.chart?.ascendant;
+  console.info(`✅ Natal validation passed — Moon: ${moon.sign} ${moon.dms}, ASC: ${asc?.sign} ${asc?.dms}`);
+}
+
+async function generateAiJsonExport() {
+  try {
+    const payload = await buildAiPayload();
+    validateNatalInPayload(payload);
+    setAiExportOutput(JSON.stringify(payload, null, 2), "✅ JSON export generated — natal chart included. Copy or download.");
+  } catch (err) { console.error(err); alert("AI JSON export failed:\n\n" + (err?.message || err)); }
+}
+
+async function generateAiPromptExport() {
+  try {
+    const payload = await buildAiPayload();
+    validateNatalInPayload(payload);
+    setAiExportOutput(buildPromptFromPayload(payload), "✅ AI prompt generated — natal chart included. Paste into Claude, ChatGPT, Gemini or Grok.");
+  } catch (err) { console.error(err); alert("AI prompt generation failed:\n\n" + (err?.message || err)); }
+}
+
+async function copyAiExportText() { const box = document.getElementById("ai-export-box"); if (!box || !box.value.trim()) { alert("Generate JSON or AI prompt first."); return; } try { await navigator.clipboard.writeText(box.value); setAiExportOutput(box.value, "Copied to clipboard."); } catch (err) { box.focus(); box.select(); document.execCommand("copy"); setAiExportOutput(box.value, "Copied using fallback selection method."); } }
+
+async function downloadAiJsonFile() {
+  let text = document.getElementById("ai-export-box")?.value || "";
+  if (!text.trim() || !text.trim().startsWith("{")) {
+    try {
+      const payload = await buildAiPayload();
+      validateNatalInPayload(payload);
+      text = JSON.stringify(payload, null, 2);
+      setAiExportOutput(text, "✅ JSON export generated and ready for download.");
+    } catch (err) { alert("AI export failed:\n\n" + (err?.message || err)); return; }
+  }
+  const safeName = "astrology-chart";
+  const blob = new Blob([text], {type:"application/json"}); const url = URL.createObjectURL(blob); const a = document.createElement("a"); a.href = url; a.download = `${safeName}-ai-export.json`; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+}
+
+window.onload = function() {
+  populateBirthPlaces();
+  applyBirthPlace();
+  populateSolarPlaces();
+  populateTransitPlaces();
+  useBirthPlaceForSolarReturn();
+  applyTransitPlace();
+};
+</script>
+</body>
+</html>
